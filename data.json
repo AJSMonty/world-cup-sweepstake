@@ -1,15 +1,10 @@
 {
-  "_comment": "EDIT THIS FILE to update the page. Set a match 'winner' to the 3-letter code of the team that advanced (penalties count). Set a prize 'code' to a team code, or null for TBD. Commit on GitHub and the page updates within ~30s.",
+  "_comment": "EDIT THIS FILE to update the page. Matches are in bracket order. Set a match 'winner' to the 3-letter code of the team that advanced (penalties count). Set a prize 'code' to a team code, or null for TBD. Commit on GitHub and the page updates within ~30s.",
   "knockoutMatches": [
     {
       "a": "RSA",
       "b": "CAN",
       "winner": "CAN"
-    },
-    {
-      "a": "BRA",
-      "b": "JPN",
-      "winner": "BRA"
     },
     {
       "a": "GER",
@@ -22,13 +17,28 @@
       "winner": "MAR"
     },
     {
-      "a": "CIV",
-      "b": "NOR",
+      "a": "BRA",
+      "b": "JPN",
+      "winner": "BRA"
+    },
+    {
+      "a": "POR",
+      "b": "CRO",
       "winner": null
     },
     {
-      "a": "FRA",
-      "b": "SWE",
+      "a": "ESP",
+      "b": "AUT",
+      "winner": null
+    },
+    {
+      "a": "USA",
+      "b": "BIH",
+      "winner": null
+    },
+    {
+      "a": "BEL",
+      "b": "SEN",
       "winner": null
     },
     {
@@ -42,28 +52,18 @@
       "winner": null
     },
     {
-      "a": "BEL",
-      "b": "SEN",
+      "a": "FRA",
+      "b": "SWE",
       "winner": null
     },
     {
-      "a": "USA",
-      "b": "BIH",
+      "a": "CIV",
+      "b": "NOR",
       "winner": null
     },
     {
-      "a": "ESP",
-      "b": "AUT",
-      "winner": null
-    },
-    {
-      "a": "POR",
-      "b": "CRO",
-      "winner": null
-    },
-    {
-      "a": "SUI",
-      "b": "ALG",
+      "a": "ARG",
+      "b": "CPV",
       "winner": null
     },
     {
@@ -72,8 +72,8 @@
       "winner": null
     },
     {
-      "a": "ARG",
-      "b": "CPV",
+      "a": "SUI",
+      "b": "ALG",
       "winner": null
     },
     {
