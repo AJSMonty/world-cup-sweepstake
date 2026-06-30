@@ -619,6 +619,45 @@
                     segments.push({ type: 'line', x1: cx + Math.cos(midAngle) * r_mid, y1: cy + Math.sin(midAngle) * r_mid, x2: node.x, y2: node.y, active: activeOut });
                 }
             }
+
+            buildVeins();
+        }
+
+        // Build one continuous Path2D per advancing team: the geometry of its
+        // run from its outer node inward, hop by hop, for as long as it keeps
+        // winning. Drawing each as a single subpath lets one pulse flow across
+        // the segment joins (lines + arcs) instead of restarting per segment.
+        var veins = [];
+        function buildVeins() {
+            veins = [];
+            if (!tree[0]) return;
+            for (var j = 0; j < tree[0].length; j++) {
+                var leaf = tree[0][j];
+                if (!leaf.team) continue;
+                var path = new Path2D();
+                path.moveTo(leaf.x, leaf.y);
+                var length = 0, idx = j, hops = 0;
+                for (var r = 0; r < 5; r++) {
+                    var child = tree[r][idx];
+                    var parent = tree[r + 1][idx >> 1];
+                    // This hop is lit only if the child is the team that advanced.
+                    if (!child.team || !parent.team || child.team.code !== parent.team.code) break;
+                    if (r + 1 === 5) {
+                        path.lineTo(parent.x, parent.y);
+                        length += Math.hypot(parent.x - child.x, parent.y - child.y);
+                    } else {
+                        var r_mid = (R[r] + R[r + 1]) / 2;
+                        var aC = child.angle, aP = parent.angle;
+                        path.lineTo(cx + Math.cos(aC) * r_mid, cy + Math.sin(aC) * r_mid);
+                        path.arc(cx, cy, r_mid, aC, aP, aP < aC);
+                        path.lineTo(parent.x, parent.y);
+                        length += Math.abs(R[r] - r_mid) + r_mid * Math.abs(aP - aC) + Math.abs(r_mid - R[r + 1]);
+                    }
+                    hops++;
+                    idx = idx >> 1;
+                }
+                if (hops > 0) veins.push({ path: path, length: length });
+            }
         }
 
         var trophyLoaded = false;
@@ -683,6 +722,53 @@
             }
         }
 
+        // Measure a flag's ink box once at a large base size so we can scale it.
+        var coverFlagCache = {};
+        function coverFlagInfo(flag) {
+            if (flag in coverFlagCache) return coverFlagCache[flag];
+            var base = 100;
+            ctx.save();
+            ctx.font = base + 'px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+            var m = ctx.measureText(flag);
+            ctx.restore();
+            var L = m.actualBoundingBoxLeft, Rt = m.actualBoundingBoxRight;
+            var A = m.actualBoundingBoxAscent, D = m.actualBoundingBoxDescent;
+            var info = null;
+            if (typeof L === 'number' && typeof Rt === 'number' &&
+                typeof A === 'number' && typeof D === 'number' &&
+                (Rt + L) > 0 && (A + D) > 0) {
+                info = { base: base, w: Rt + L, h: A + D, ix: (Rt - L) / 2, iy: (D - A) / 2 };
+            }
+            coverFlagCache[flag] = info;
+            return info;
+        }
+
+        // Draw the flag so it fills the circle like object-fit: cover — scale so
+        // the flag's shorter side covers the diameter, centre it, and clip to a
+        // circle so it stays nicely round (corners cropped, no letterboxing).
+        function drawCoverFlag(flag, x, y, r) {
+            var info = coverFlagInfo(flag);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.clip();
+            if (info) {
+                var scale = (2 * r) / Math.min(info.w, info.h) * 1.04;
+                ctx.font = (info.base * scale) + 'px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+                ctx.fillText(flag, x - info.ix * scale, y - info.iy * scale);
+            } else {
+                ctx.font = (r * 1.9) + 'px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(flag, x, y);
+            }
+            ctx.restore();
+        }
+
         function drawNodesAndText() {
             ctx.textBaseline = 'middle';
             ctx.font = 'bold 13px sans-serif';
@@ -707,20 +793,23 @@
 
             for (var r = 0; r <= 4; r++) {
                 tree[r].forEach(function(n) {
-                    var isActive = (r === 0) ? true : !!n.team; 
+                    var isActive = (r === 0) ? true : !!n.team;
                     ctx.beginPath();
                     ctx.arc(n.x, n.y, 14, 0, Math.PI * 2);
                     ctx.fillStyle = isActive ? '#14120e' : '#0a0a0a';
                     ctx.fill();
+
+                    if (n.team) {
+                        // Flag fills the circle (object-fit: cover), clipped round.
+                        drawCoverFlag(n.team.flag, n.x, n.y, 13);
+                    }
+
+                    // Gold ring on top so the flag edge stays crisp.
+                    ctx.beginPath();
+                    ctx.arc(n.x, n.y, 14, 0, Math.PI * 2);
                     ctx.lineWidth = 2;
                     ctx.strokeStyle = isActive ? '#d4af37' : '#444';
                     ctx.stroke();
-
-                    if (n.team) {
-                        // Measured ink-box centring so the flag sits dead-centre
-                        // on every platform/emoji font (see drawCenteredFlag).
-                        drawCenteredFlag(n.team.flag, n.x, n.y, '14px sans-serif');
-                    }
                 });
             }
         }
@@ -756,11 +845,28 @@
             ctx.lineWidth = 3.5; ctx.strokeStyle = '#9e781d'; 
             segments.forEach(function(s) { if (s.active) drawSegment(s); });
 
-            var timeStep = Math.floor(elapsed * 50); 
-            ctx.lineWidth = 3.5; ctx.strokeStyle = '#ffe891'; ctx.shadowColor = '#d4af37'; ctx.shadowBlur = 10;
-            ctx.setLineDash([15, 35]); ctx.lineDashOffset = -timeStep; 
-            segments.forEach(function(s) { if (s.active) drawSegment(s); });
-            
+            // A single bright pulse flows inward along each advancing team's
+            // vein (toward the trophy), looping. One continuous dash with a huge
+            // gap = exactly one pulse per vein; the dash offset animates it in.
+            var PULSE_LEN = 24;     // length of the lit pulse
+            var PULSE_SPEED = 150;  // canvas units per second
+            var PULSE_GAP = 64;     // dark pause (units) before the next pulse
+            ctx.save();
+            ctx.lineCap = 'round';
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#fff1ad';
+            ctx.shadowColor = '#ffcf4d';
+            ctx.shadowBlur = 14;
+            ctx.setLineDash([PULSE_LEN, 100000]);
+            veins.forEach(function(v) {
+                if (v.length <= 1) return;
+                var travel = v.length + PULSE_GAP;          // full cycle distance
+                var pos = (elapsed * PULSE_SPEED) % travel;  // pulse front position
+                ctx.lineDashOffset = -pos;                   // negative = move forward (inward)
+                ctx.stroke(v.path);
+            });
+            ctx.restore();
+
             ctx.setLineDash([]); ctx.shadowBlur = 0;
             drawNodesAndText();
             
