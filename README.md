@@ -47,10 +47,51 @@ For a picture in the link card, drop a 1200×630 PNG named `preview.png` in the
 repo, then uncomment the `og:image` line in `index.html` and set the path to
 `https://ajsmonty.github.io/world-cup-sweepstake/preview.png`.
 
-## Note on automation
+## Optional: automatic results (API-Football)
 
-A fully automatic "pull live scores" setup isn't recommended here: GitHub Pages
-is static (no server to hold an API key safely), free football APIs are
-unreliable for CORS/coverage, and the novelty prizes (longest-distance goal,
-dirtiest team) don't exist in any data feed. For a ~3-week knockout, editing the
-tiny `data.json` is less work and never breaks.
+There's a GitHub Actions workflow that can keep the knockout results up to date
+for you, so you only have to hand-edit the novelty prizes.
+
+**How it works.** `.github/workflows/update-data.yml` runs every 30 minutes (and
+on demand from the Actions tab). It runs `scripts/update-data.mjs`, which calls
+[API-Football](https://www.api-football.com/), reads the World Cup fixtures, and
+rewrites `data.json` with:
+
+- every knockout `winner` across all rounds (penalties count), and
+- the **tournament winner / runner-up / 3rd place** prizes once those games are
+  played.
+
+It then commits `data.json`, and the live site updates within ~30 seconds. The
+page itself is unchanged — this just edits `data.json` the same way you would by
+hand. No server, no hosting; the workflow runs on GitHub.
+
+**One-time setup.**
+
+1. Get a free key at <https://dashboard.api-football.com/> (direct API-Football,
+   not RapidAPI — the script sends the `x-apisports-key` header).
+2. In this repo: `Settings → Secrets and variables → Actions → New repository
+   secret`. Name it **`API_FOOTBALL_KEY`**, paste the key, save.
+3. Enable Actions if prompted (`Actions` tab → enable workflows).
+4. Trigger a first run: `Actions → Update results → Run workflow`. Check the log;
+   it prints how many ties it found and decided.
+
+**What it never touches.** The novelty prizes — wooden spoon, biggest hammering,
+longest-distance goal, dirtiest team — have no data feed, so you still set those
+by hand in `data.json`'s `dynamicPrizes`. The script only overwrites `winner`,
+`runnerUp` and `thirdPlace`.
+
+**Things to know.**
+
+- The free API-Football tier is ~100 requests/day; this uses ~48 (one per run).
+  Coverage of the 2026 World Cup depends on your plan — if a run logs an API
+  error or 0 fixtures, it leaves `data.json` untouched (nothing breaks).
+- Defaults are league `1` (World Cup) and season `2026`. Override via the
+  `API_FOOTBALL_LEAGUE` / `API_FOOTBALL_SEASON` env vars in the workflow if
+  needed.
+- Team names are matched to the bracket's 3-letter codes by an alias table in
+  the script. If a nation ever fails to match, add its API spelling to
+  `ALIASES` in `scripts/update-data.mjs`.
+
+**Prefer to stay fully manual?** Just don't add the secret (the workflow then
+no-ops), or delete `.github/workflows/update-data.yml`. Editing the tiny
+`data.json` by hand is little work for a ~3-week knockout and never breaks.
