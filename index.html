@@ -257,7 +257,11 @@
             .header { position: static; text-align: center; padding: 20px 10px 5px; }
             .header h1 { font-size: 28px; letter-spacing: 2px; }
             .header h2 { font-size: 14px; letter-spacing: 4px; }
-            canvas { position: relative; width: 100%; height: auto; aspect-ratio: 1920 / 1080; display: block; object-fit: contain; }
+            /* The circular tree only fills the middle ~45% of the 1920-wide
+               canvas. Overscale it and pull it left so the empty side bands
+               are cropped (by body's overflow-x:hidden) and the bracket
+               fills the screen width. Vertically it stays fully visible. */
+            canvas { position: relative; width: 178%; max-width: none; height: auto; margin: 0 0 0 -39%; aspect-ratio: 1920 / 1080; display: block; object-fit: contain; }
             .legend { position: static; display: flex; justify-content: center; gap: 20px; padding: 15px 10px; flex-wrap: wrap; }
             .legend-item { margin-top: 0; font-size: 14px; }
             .ledger-container { position: static; width: 92%; max-width: 600px; margin: 10px auto; height: auto; max-height: 420px; }
