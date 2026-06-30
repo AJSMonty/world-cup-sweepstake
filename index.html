@@ -633,6 +633,53 @@
             ctx.stroke();
         }
 
+        // Flag emoji don't sit at the same place inside the text box on every
+        // platform — Apple Color Emoji (all iOS browsers, incl. iOS Chrome,
+        // which is WebKit) renders noticeably off-centre when you rely on
+        // textBaseline 'middle'. So instead of trusting the font's metrics, we
+        // measure each glyph's real ink box once and offset the draw point so
+        // that box's centre lands exactly on the circle centre. Font-agnostic,
+        // so it's centred whatever emoji font the device uses. Cached per glyph
+        // because measureText on colour emoji isn't free at 60fps.
+        var flagOffsetCache = {};
+        function flagDrawOffset(flag, font) {
+            var key = font + '|' + flag;
+            if (key in flagOffsetCache) return flagOffsetCache[key];
+            ctx.save();
+            ctx.font = font;
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'alphabetic';
+            var m = ctx.measureText(flag);
+            ctx.restore();
+            var off = null;
+            var L = m.actualBoundingBoxLeft, Rt = m.actualBoundingBoxRight;
+            var A = m.actualBoundingBoxAscent, D = m.actualBoundingBoxDescent;
+            if (typeof L === 'number' && typeof Rt === 'number' &&
+                typeof A === 'number' && typeof D === 'number' && (A + D) > 0) {
+                // Ink box: left = x-L, right = x+Rt, top = y-A, bottom = y+D
+                // (drawn with textAlign 'left', textBaseline 'alphabetic').
+                // Shift so the box centre is at the target point.
+                off = { dx: -(Rt - L) / 2, dy: -(D - A) / 2 };
+            }
+            flagOffsetCache[key] = off;
+            return off;
+        }
+
+        function drawCenteredFlag(flag, x, y, font) {
+            var off = flagDrawOffset(flag, font);
+            ctx.font = font;
+            if (off) {
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+                ctx.fillText(flag, x + off.dx, y + off.dy);
+            } else {
+                // Fallback for browsers without ink-box metrics.
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(flag, x, y);
+            }
+        }
+
         function drawNodesAndText() {
             ctx.textBaseline = 'middle';
             ctx.font = 'bold 13px sans-serif';
@@ -667,14 +714,9 @@
                     ctx.stroke();
 
                     if (n.team) {
-                        // Center the flag exactly in its circle. textAlign
-                        // 'center' + textBaseline 'middle' at (n.x, n.y) does
-                        // this geometrically, so it holds at every breakpoint
-                        // (the canvas scales uniformly via object-fit: contain).
-                        ctx.font = '14px sans-serif';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(n.team.flag, n.x, n.y);
+                        // Measured ink-box centring so the flag sits dead-centre
+                        // on every platform/emoji font (see drawCenteredFlag).
+                        drawCenteredFlag(n.team.flag, n.x, n.y, '14px sans-serif');
                     }
                 });
             }
