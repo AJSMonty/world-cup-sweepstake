@@ -2,24 +2,24 @@
   "_comment": "EDIT THIS FILE to update the page. Matches are in bracket order. Set a match 'winner' to the 3-letter code of the team that advanced (penalties count). Set a prize 'code' to a team code, or null for TBD. Commit on GitHub and the page updates within ~30s.",
   "knockoutMatches": [
     {
-      "a": "RSA",
-      "b": "CAN",
-      "winner": "CAN"
-    },
-    {
       "a": "GER",
       "b": "PAR",
       "winner": "PAR"
     },
     {
+      "a": "FRA",
+      "b": "SWE",
+      "winner": null
+    },
+    {
+      "a": "RSA",
+      "b": "CAN",
+      "winner": "CAN"
+    },
+    {
       "a": "NED",
       "b": "MAR",
       "winner": "MAR"
-    },
-    {
-      "a": "BRA",
-      "b": "JPN",
-      "winner": "BRA"
     },
     {
       "a": "POR",
@@ -42,6 +42,16 @@
       "winner": null
     },
     {
+      "a": "BRA",
+      "b": "JPN",
+      "winner": "BRA"
+    },
+    {
+      "a": "CIV",
+      "b": "NOR",
+      "winner": "NOR"
+    },
+    {
       "a": "MEX",
       "b": "ECU",
       "winner": null
@@ -50,16 +60,6 @@
       "a": "ENG",
       "b": "COD",
       "winner": null
-    },
-    {
-      "a": "FRA",
-      "b": "SWE",
-      "winner": null
-    },
-    {
-      "a": "CIV",
-      "b": "NOR",
-      "winner": "NOR"
     },
     {
       "a": "ARG",
