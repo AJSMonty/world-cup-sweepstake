@@ -41,11 +41,17 @@ code and rewrite `status`. Leave `code` as `null` to show "TBD".
 Team codes are the `code` values inside `masterTeams` in `index.html`
 (FRA, ARG, ESP, ENG, BRA, MAR, etc.).
 
-## Optional: WhatsApp preview image
+## WhatsApp preview image
 
-For a picture in the link card, drop a 1200×630 PNG named `preview.png` in the
-repo, then uncomment the `og:image` line in `index.html` and set the path to
-`https://ajsmonty.github.io/world-cup-sweepstake/preview.png`.
+The link card already shows a large image — `preview.jpg` (1200×630) in the repo
+root, wired up via the Open Graph `og:image` tags in `index.html`.
+
+To refresh it (e.g. after the bracket fills out), replace `preview.jpg` with a
+new 1200×630 image and bump the `?v=` number on the `og:image` /
+`og:image:secure_url` / `twitter:image` tags so WhatsApp re-fetches it instead of
+serving its cached copy. WhatsApp caches previews hard, so when testing a change,
+share the link with a throwaway query (e.g. `…/world-cup-sweepstake/?v=2`) to
+force its crawler to re-scrape.
 
 ## Optional: automatic results (API-Football)
 
