@@ -111,5 +111,36 @@
       "code": "RSA",
       "status": "Leading: worst conduct score -12 (group stage)"
     }
-  }
+  },
+  "_fixtures_comment": "Whole remaining knockout schedule. Teams are NOT listed — each fixture points at a bracket slot (level + pair: competitors are tree[level][2*pair] and tree[level][2*pair+1], winner advances to tree[level+1][pair]) so they fill in automatically. type 'third' = 3rd-place play-off (the two semi-final losers). 'date' is the match-day; small-hours UK kick-offs belong to that match-day's overnight window.",
+  "fixtures": [
+    { "round": "Round of 32", "level": 0, "pair": 1,  "date": "2026-06-30", "time": "10:00pm", "venue": "East Rutherford" },
+    { "round": "Round of 32", "level": 0, "pair": 9,  "date": "2026-06-30", "time": "7:00pm",  "venue": "Dallas" },
+    { "round": "Round of 32", "level": 0, "pair": 10, "date": "2026-06-30", "time": "2:00am",  "venue": "Mexico City" },
+    { "round": "Round of 32", "level": 0, "pair": 11, "date": "2026-07-01", "time": "5:00pm",  "venue": "Atlanta" },
+    { "round": "Round of 32", "level": 0, "pair": 7,  "date": "2026-07-01", "time": "9:00pm",  "venue": "Seattle" },
+    { "round": "Round of 32", "level": 0, "pair": 6,  "date": "2026-07-01", "time": "1:00am",  "venue": "Santa Clara" },
+    { "round": "Round of 32", "level": 0, "pair": 5,  "date": "2026-07-02", "time": "8:00pm",  "venue": "Los Angeles" },
+    { "round": "Round of 32", "level": 0, "pair": 4,  "date": "2026-07-02", "time": "12:00am", "venue": "Toronto" },
+    { "round": "Round of 32", "level": 0, "pair": 14, "date": "2026-07-02", "time": "4:00am",  "venue": "Vancouver" },
+    { "round": "Round of 32", "level": 0, "pair": 13, "date": "2026-07-03", "time": "7:00pm",  "venue": "Arlington" },
+    { "round": "Round of 32", "level": 0, "pair": 12, "date": "2026-07-03", "time": "11:00pm", "venue": "Miami" },
+    { "round": "Round of 32", "level": 0, "pair": 15, "date": "2026-07-03", "time": "2:30am",  "venue": "Kansas City" },
+    { "round": "Round of 16", "level": 1, "pair": 1,  "date": "2026-07-04", "time": "6:00pm",  "venue": "Houston" },
+    { "round": "Round of 16", "level": 1, "pair": 0,  "date": "2026-07-04", "time": "10:00pm", "venue": "Philadelphia" },
+    { "round": "Round of 16", "level": 1, "pair": 4,  "date": "2026-07-05", "time": "9:00pm",  "venue": "New Jersey" },
+    { "round": "Round of 16", "level": 1, "pair": 5,  "date": "2026-07-05", "time": "1:00am",  "venue": "Mexico City" },
+    { "round": "Round of 16", "level": 1, "pair": 2,  "date": "2026-07-06", "time": "8:00pm",  "venue": "Arlington" },
+    { "round": "Round of 16", "level": 1, "pair": 3,  "date": "2026-07-06", "time": "1:00am",  "venue": "Seattle" },
+    { "round": "Round of 16", "level": 1, "pair": 6,  "date": "2026-07-07", "time": "5:00pm",  "venue": "Atlanta" },
+    { "round": "Round of 16", "level": 1, "pair": 7,  "date": "2026-07-07", "time": "9:00pm",  "venue": "Vancouver" },
+    { "round": "Quarter-final", "level": 2, "pair": 0, "date": "2026-07-09", "time": "9:00pm",  "venue": "Boston" },
+    { "round": "Quarter-final", "level": 2, "pair": 1, "date": "2026-07-10", "time": "8:00pm",  "venue": "Los Angeles" },
+    { "round": "Quarter-final", "level": 2, "pair": 2, "date": "2026-07-11", "time": "10:00pm", "venue": "Miami" },
+    { "round": "Quarter-final", "level": 2, "pair": 3, "date": "2026-07-11", "time": "2:00am",  "venue": "Kansas City" },
+    { "round": "Semi-final", "level": 3, "pair": 0, "date": "2026-07-14", "time": "7:00pm", "venue": "Dallas" },
+    { "round": "Semi-final", "level": 3, "pair": 1, "date": "2026-07-15", "time": "7:00pm", "venue": "Atlanta" },
+    { "round": "3rd-Place Play-off", "type": "third", "date": "2026-07-18", "time": "9:00pm", "venue": "Miami" },
+    { "round": "Final", "level": 4, "pair": 0, "date": "2026-07-19", "time": "7:00pm", "venue": "New Jersey" }
+  ]
 }

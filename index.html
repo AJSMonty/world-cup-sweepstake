@@ -128,6 +128,51 @@
             flex-direction: column;
         }
 
+        /* TODAY'S FIXTURES (under the header, left) */
+        .fixtures-container {
+            position: absolute;
+            top: 15%;
+            left: 3%;
+            width: 340px;
+            max-height: 40%;
+            background: rgba(12, 12, 12, 0.92);
+            border: 2px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .fixture-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 9px 2px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .fixture-row:last-child { border-bottom: none; }
+        .fixture-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .fixture-round {
+            font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #8a7a45;
+        }
+        .fixture-pair { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .fixture-team { font-size: 13px; color: #eee; white-space: nowrap; }
+        .fixture-team.won  { color: #ffe7a3; font-weight: 700; }
+        .fixture-team.lost { color: #888; }
+        .fixture-vs { color: #777; font-size: 11px; }
+        .fixture-time { color: #d4af37; font-weight: 700; font-size: 14px; white-space: nowrap; }
+        .fixture-ft {
+            color: #9a9a9a; font-weight: 700; font-size: 11px; letter-spacing: 1px;
+            border: 1px solid #555; border-radius: 4px; padding: 1px 5px;
+        }
+        .dot.today {
+            background-color: #1a1a1a;
+            border-color: #ffe2a0;
+            box-shadow: 0 0 10px rgba(255, 216, 120, 0.85);
+        }
+
         .panel-header {
             background: linear-gradient(180deg, #2a2211, #100e08);
             border-bottom: 2px solid #d4af37;
@@ -248,11 +293,17 @@
             body { overflow-y: visible; display: flex; flex-direction: column; height: auto; min-height: 100%; }
 
             /* Float the bracket graphic to the top, panels below */
-            .header           { order: 1; }
-            canvas            { order: 2; }
-            .legend           { order: 3; }
-            .ledger-container { order: 4; }
-            .prizes-container { order: 5; }
+            .header            { order: 1; }
+            canvas             { order: 2; }
+            .fixtures-container { order: 3; }
+            .legend            { order: 4; }
+            .ledger-container  { order: 5; }
+            .prizes-container  { order: 6; }
+
+            .fixtures-container {
+                position: static; width: 92%; max-width: 600px;
+                margin: 10px auto 0; max-height: none;
+            }
 
             .header { position: static; text-align: center; padding: 20px 10px 5px; }
             .header h1 { font-size: 28px; letter-spacing: 2px; }
@@ -303,6 +354,15 @@
     <div class="legend">
         <div class="legend-item"><div class="dot active"></div> Active In Knockouts</div>
         <div class="legend-item"><div class="dot inactive"></div> Group Stage / Eliminated</div>
+        <div class="legend-item" id="legend-today" style="display:none;"><div class="dot today"></div> Playing Today</div>
+    </div>
+
+    <div class="fixtures-container" id="fixtures-panel" style="display:none;">
+        <div class="panel-header">
+            <h3>Today's Fixtures</h3>
+            <p id="fixtures-date">—</p>
+        </div>
+        <div class="panel-body" id="fixtures-list"></div>
     </div>
 
     <div class="ledger-container">
@@ -402,6 +462,52 @@
             longestGoal:  { code: 'CPV', status: "Leading: Kevin Pina ~30.8m vs Uruguay — longest of the tournament (group stage)" },
             dirtiestTeam: { code: 'RSA', status: "Leading: worst conduct score -12 (group stage)" }
         };
+
+        // 4. FULL KNOCKOUT SCHEDULE (drives "Today's Fixtures" + today highlight)
+        // Fixed dates/times/venues for the WHOLE remaining tournament — teams are
+        // NOT stored: each fixture points at a bracket slot (level + pair) and the
+        // competitors + result resolve automatically from the tree as rounds are
+        // played, so this never needs editing round-to-round.
+        //   level/pair: competitors are tree[level][2*pair] and tree[level][2*pair+1];
+        //               the winner advances to tree[level+1][pair].
+        //   type:'third' is the 3rd-place play-off (the two semi-final losers).
+        // 'date' is the match-day; 'time' is the UK kick-off. Small-hours kick-offs
+        // belong to that match-day's overnight window (see getMatchday).
+        var fixtures = [
+            // Round of 32 (level 0)
+            { round: 'Round of 32', level: 0, pair: 1,  date: '2026-06-30', time: '10:00pm', venue: 'East Rutherford' },
+            { round: 'Round of 32', level: 0, pair: 9,  date: '2026-06-30', time: '7:00pm',  venue: 'Dallas' },
+            { round: 'Round of 32', level: 0, pair: 10, date: '2026-06-30', time: '2:00am',  venue: 'Mexico City' },
+            { round: 'Round of 32', level: 0, pair: 11, date: '2026-07-01', time: '5:00pm',  venue: 'Atlanta' },
+            { round: 'Round of 32', level: 0, pair: 7,  date: '2026-07-01', time: '9:00pm',  venue: 'Seattle' },
+            { round: 'Round of 32', level: 0, pair: 6,  date: '2026-07-01', time: '1:00am',  venue: 'Santa Clara' },
+            { round: 'Round of 32', level: 0, pair: 5,  date: '2026-07-02', time: '8:00pm',  venue: 'Los Angeles' },
+            { round: 'Round of 32', level: 0, pair: 4,  date: '2026-07-02', time: '12:00am', venue: 'Toronto' },
+            { round: 'Round of 32', level: 0, pair: 14, date: '2026-07-02', time: '4:00am',  venue: 'Vancouver' },
+            { round: 'Round of 32', level: 0, pair: 13, date: '2026-07-03', time: '7:00pm',  venue: 'Arlington' },
+            { round: 'Round of 32', level: 0, pair: 12, date: '2026-07-03', time: '11:00pm', venue: 'Miami' },
+            { round: 'Round of 32', level: 0, pair: 15, date: '2026-07-03', time: '2:30am',  venue: 'Kansas City' },
+            // Round of 16 (level 1)
+            { round: 'Round of 16', level: 1, pair: 1,  date: '2026-07-04', time: '6:00pm',  venue: 'Houston' },
+            { round: 'Round of 16', level: 1, pair: 0,  date: '2026-07-04', time: '10:00pm', venue: 'Philadelphia' },
+            { round: 'Round of 16', level: 1, pair: 4,  date: '2026-07-05', time: '9:00pm',  venue: 'New Jersey' },
+            { round: 'Round of 16', level: 1, pair: 5,  date: '2026-07-05', time: '1:00am',  venue: 'Mexico City' },
+            { round: 'Round of 16', level: 1, pair: 2,  date: '2026-07-06', time: '8:00pm',  venue: 'Arlington' },
+            { round: 'Round of 16', level: 1, pair: 3,  date: '2026-07-06', time: '1:00am',  venue: 'Seattle' },
+            { round: 'Round of 16', level: 1, pair: 6,  date: '2026-07-07', time: '5:00pm',  venue: 'Atlanta' },
+            { round: 'Round of 16', level: 1, pair: 7,  date: '2026-07-07', time: '9:00pm',  venue: 'Vancouver' },
+            // Quarter-finals (level 2)
+            { round: 'Quarter-final', level: 2, pair: 0, date: '2026-07-09', time: '9:00pm',  venue: 'Boston' },
+            { round: 'Quarter-final', level: 2, pair: 1, date: '2026-07-10', time: '8:00pm',  venue: 'Los Angeles' },
+            { round: 'Quarter-final', level: 2, pair: 2, date: '2026-07-11', time: '10:00pm', venue: 'Miami' },
+            { round: 'Quarter-final', level: 2, pair: 3, date: '2026-07-11', time: '2:00am',  venue: 'Kansas City' },
+            // Semi-finals (level 3)
+            { round: 'Semi-final', level: 3, pair: 0, date: '2026-07-14', time: '7:00pm', venue: 'Dallas' },
+            { round: 'Semi-final', level: 3, pair: 1, date: '2026-07-15', time: '7:00pm', venue: 'Atlanta' },
+            // Third-place play-off + Final
+            { round: '3rd-Place Play-off', type: 'third', date: '2026-07-18', time: '9:00pm', venue: 'Miami' },
+            { round: 'Final', level: 4, pair: 0, date: '2026-07-19', time: '7:00pm', venue: 'New Jersey' }
+        ];
 
 
         // ------------------------------------------------------------------
@@ -794,6 +900,22 @@
             for (var r = 0; r <= 4; r++) {
                 tree[r].forEach(function(n) {
                     var isActive = (r === 0) ? true : !!n.team;
+                    var playingToday = n.team && todayPlayingCodes[n.team.code];
+
+                    // Subtle breathing gold halo marks teams playing today.
+                    if (playingToday) {
+                        var pulse = 0.5 + 0.5 * Math.sin(animClock * 3);
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(n.x, n.y, 18 + pulse * 2.5, 0, Math.PI * 2);
+                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = 'rgba(255, 226, 150, ' + (0.4 + 0.4 * pulse) + ')';
+                        ctx.shadowColor = '#ffd86a';
+                        ctx.shadowBlur = 8 + pulse * 12;
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+
                     ctx.beginPath();
                     ctx.arc(n.x, n.y, 14, 0, Math.PI * 2);
                     ctx.fillStyle = isActive ? '#14120e' : '#0a0a0a';
@@ -804,20 +926,23 @@
                         drawCoverFlag(n.team.flag, n.x, n.y, 13);
                     }
 
-                    // Gold ring on top so the flag edge stays crisp.
+                    // Gold ring on top so the flag edge stays crisp (brighter
+                    // and a touch thicker for teams playing today).
                     ctx.beginPath();
                     ctx.arc(n.x, n.y, 14, 0, Math.PI * 2);
-                    ctx.lineWidth = 2;
-                    ctx.strokeStyle = isActive ? '#d4af37' : '#444';
+                    ctx.lineWidth = playingToday ? 2.6 : 2;
+                    ctx.strokeStyle = playingToday ? '#ffe7a3' : (isActive ? '#d4af37' : '#444');
                     ctx.stroke();
                 });
             }
         }
 
         var startTime = Date.now();
+        var animClock = 0; // seconds since start, shared with the today-highlight
 
         function render() {
             var elapsed = (Date.now() - startTime) / 1000;
+            animClock = elapsed;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             var grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 800);
@@ -880,9 +1005,122 @@
             requestAnimationFrame(render);
         }
 
+        // ------------------------------------------------------------------
+        // TODAY'S FIXTURES  (panel + the in-bracket "playing today" highlight)
+        // ------------------------------------------------------------------
+        var todayPlayingCodes = {};
+
+        function shiftDate(ymd, delta) {
+            var d = new Date(ymd + 'T12:00:00Z');
+            d.setUTCDate(d.getUTCDate() + delta);
+            return d.toISOString().slice(0, 10);
+        }
+
+        // The "current match-day". A World Cup match-day in the UK runs overnight,
+        // so anything kicking off before ~6am still belongs to the previous
+        // evening's slate — e.g. a 2am game counts as today's fixture. ?date=
+        // overrides for previewing any day.
+        function getMatchday() {
+            var q = (location.search.match(/[?&]date=(\d{4}-\d{2}-\d{2})/) || [])[1];
+            if (q) return q;
+            var now = new Date();
+            var ukDate, ukHour;
+            try {
+                ukDate = now.toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
+                ukHour = parseInt(new Intl.DateTimeFormat('en-GB', {
+                    timeZone: 'Europe/London', hour: 'numeric', hourCycle: 'h23'
+                }).format(now), 10);
+            } catch (e) {
+                ukDate = now.toISOString().slice(0, 10);
+                ukHour = now.getUTCHours();
+            }
+            return ukHour < 6 ? shiftDate(ukDate, -1) : ukDate;
+        }
+
+        function kickoffSortKey(t) {
+            var m = /(\d+):(\d+)\s*(am|pm)/i.exec(t || '');
+            if (!m) return 0;
+            var h = parseInt(m[1], 10) % 12; if (/pm/i.test(m[3])) h += 12;
+            var mins = h * 60 + parseInt(m[2], 10);
+            if (mins < 7 * 60) mins += 24 * 60; // small-hours games sort after the evening
+            return mins;
+        }
+
+        function nodeTeam(level, idx) {
+            return (tree[level] && tree[level][idx]) ? tree[level][idx].team : null;
+        }
+
+        function semiFinalLoser(sfPair) {
+            var a = nodeTeam(3, 2 * sfPair), b = nodeTeam(3, 2 * sfPair + 1), w = nodeTeam(4, sfPair);
+            if (!a || !b || !w) return null;
+            return w.code === a.code ? b : a;
+        }
+
+        // Resolve a fixture's current competitors + result from the live bracket.
+        function resolveFixture(f) {
+            if (f.type === 'third') {
+                var tp = dynamicPrizes.thirdPlace || {};
+                return { a: semiFinalLoser(0), b: semiFinalLoser(1), winner: tp.code || null };
+            }
+            var wNode = nodeTeam(f.level + 1, f.pair);
+            return {
+                a: nodeTeam(f.level, 2 * f.pair),
+                b: nodeTeam(f.level, 2 * f.pair + 1),
+                winner: wNode ? wNode.code : null
+            };
+        }
+
+        function refreshFixtures() {
+            var today = getMatchday();
+            var list = fixtures.filter(function(f) { return f.date === today; })
+                               .sort(function(a, b) { return kickoffSortKey(a.time) - kickoffSortKey(b.time); });
+
+            todayPlayingCodes = {};
+            var html = '';
+            list.forEach(function(f) {
+                var res = resolveFixture(f);
+                var aT = res.a, bT = res.b, winner = res.winner;
+                if (!winner) {
+                    if (aT) todayPlayingCodes[aT.code] = true;
+                    if (bT) todayPlayingCodes[bT.code] = true;
+                }
+                var aName = aT ? (aT.flag + ' ' + aT.name) : 'TBD';
+                var bName = bT ? (bT.flag + ' ' + bT.name) : 'TBD';
+                var aCls = (winner && aT) ? (winner === aT.code ? ' won' : ' lost') : '';
+                var bCls = (winner && bT) ? (winner === bT.code ? ' won' : ' lost') : '';
+                var right = winner ? '<span class="fixture-ft">FT</span>'
+                                   : '<span class="fixture-time">' + f.time + '</span>';
+                html += '<div class="fixture-row">' +
+                            '<div class="fixture-main">' +
+                                '<span class="fixture-round">' + f.round + '</span>' +
+                                '<span class="fixture-pair">' +
+                                    '<span class="fixture-team' + aCls + '">' + aName + '</span>' +
+                                    '<span class="fixture-vs">v</span>' +
+                                    '<span class="fixture-team' + bCls + '">' + bName + '</span>' +
+                                '</span>' +
+                            '</div>' + right +
+                        '</div>';
+            });
+
+            var panel = document.getElementById('fixtures-panel');
+            var legendToday = document.getElementById('legend-today');
+            if (!list.length) {
+                if (panel) panel.style.display = 'none';
+                if (legendToday) legendToday.style.display = 'none';
+                return;
+            }
+            document.getElementById('fixtures-list').innerHTML = html;
+            var d = new Date(today + 'T12:00:00Z');
+            document.getElementById('fixtures-date').innerText =
+                d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }) + ' · UK kick-off';
+            if (panel) panel.style.display = 'flex';
+            if (legendToday) legendToday.style.display = 'flex';
+        }
+
         function init() {
             processStandings();
             buildTree();
+            refreshFixtures();
             requestAnimationFrame(render);
         }
 
@@ -894,6 +1132,7 @@
             .then(function(data) {
                 if (data && Array.isArray(data.knockoutMatches)) knockoutMatches = data.knockoutMatches;
                 if (data && data.dynamicPrizes) dynamicPrizes = data.dynamicPrizes;
+                if (data && Array.isArray(data.fixtures)) fixtures = data.fixtures;
             })
             .catch(function() { /* use embedded fallback defaults */ })
             .then(init);
