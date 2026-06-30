@@ -624,7 +624,10 @@
         var trophyLoaded = false;
         var trophyImg = new Image();
         trophyImg.onload = function() { trophyLoaded = true; };
-        trophyImg.src = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTUwIj48cGF0aCBkPSJNMjAgMjBDMjAgODAgNDAgMTAwIDUwIDEwMEM2MCAxMDAgODAgODAgODAgMjBaIiBmaWxsPSIjZDRhZjM3IiBzdHJva2U9IiNhYTgwMDAiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0yMCAzMEMwIDMwIDAgNjAgMjAgNzBNODAgMzBDMTAwIDMwIDEwMCA2MCA4MCA3MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDRhZjM3IiBzdHJva2Utd2lkdGg9IjYiLz48cmVjdCB4PSI0MCIgeT0iMTAwIiB3aWR0aD0iMjAiIGhlaWdodD0iMTAiIGZpbGw9IiNkNGFmMzciLz48cmVjdCB4PSIzMCIgeT0iMTMwIiB3aWR0aD0iNDAiIGhlaWdodD0iMTAiIGZpbGw9IiNkNGFmMzciLz48cmVjdCB4PSIyMCIgeT0iMTQwIiB3aWR0aD0iNjAiIGhlaWdodD0iMTAiIGZpbGw9IiNhYTgwMDAiLz48ZWxsaXBzZSBjeD0iNTAiIGN5PSIyMCIgcng9IjMwIiByeT0iMTAiIGZpbGw9IiNmZmQ3MDAiIHN0cm9rZT0iI2FhODAwMCIgc3Ryb2tlLXdpZHRoPSIyIi8+PC9zdmc+";
+        // Real FIFA World Cup trophy, transparent PNG (committed alongside this
+        // file). Cache-busted so an updated image shows without a hard refresh.
+        trophyImg.src = "trophy.png?v=1";
+        var TROPHY_H = 116; // on-canvas display height; width derives from the image aspect
 
         function drawSegment(s) {
             ctx.beginPath();
@@ -729,8 +732,22 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             var grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 800);
-            grad.addColorStop(0, 'rgba(40, 32, 10, 0.4)'); grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            grad.addColorStop(0, 'rgba(50, 38, 14, 0.4)'); grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Warm golden bloom behind the bracket centre, blooming up from the
+            // trophy base — sits under the veins so the trophy reads as lit.
+            var gy = cy + TROPHY_H * 0.12;
+            var gr = TROPHY_H * 2.15;
+            var bloom = ctx.createRadialGradient(cx, gy, 4, cx, gy, gr);
+            bloom.addColorStop(0,    'rgba(255, 216, 132, 0.55)');
+            bloom.addColorStop(0.30, 'rgba(247, 190, 86, 0.28)');
+            bloom.addColorStop(0.62, 'rgba(176, 120, 34, 0.09)');
+            bloom.addColorStop(1,    'rgba(0, 0, 0, 0)');
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = bloom; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
 
             ctx.lineCap = 'round';
             ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'; ctx.setLineDash([]);
@@ -748,9 +765,11 @@
             drawNodesAndText();
             
             if (trophyLoaded) {
-                ctx.shadowBlur = 25; ctx.shadowColor = '#d4af37';
-                ctx.drawImage(trophyImg, cx - 30, cy - 45, 60, 90);
-                ctx.shadowBlur = 0; 
+                // Preserve the trophy's true aspect ratio (no stretching).
+                var tw = TROPHY_H * (trophyImg.width / trophyImg.height);
+                ctx.shadowBlur = 20; ctx.shadowColor = 'rgba(212, 175, 55, 0.85)';
+                ctx.drawImage(trophyImg, cx - tw / 2, cy - TROPHY_H / 2, tw, TROPHY_H);
+                ctx.shadowBlur = 0;
             }
             requestAnimationFrame(render);
         }
