@@ -20,7 +20,17 @@
     <meta property="og:image:alt" content="World Cup 2026 live knockout bracket and Berks Footy sweepstake dashboard" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=1" />
-    <meta name="theme-color" content="#d4af37" />
+
+    <!-- ===== Installable app (PWA) ===== -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#0c0a06" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="Berks Footy" />
     <style>
         body, html {
             margin: 0;
@@ -1143,6 +1153,15 @@
             })
             .catch(function() { /* use embedded fallback defaults */ })
             .then(init);
+
+        // Register the service worker so the site is installable to the home
+        // screen (PWA) and loads instantly / works offline. Fails silently on
+        // browsers without support or when opened from file://.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('sw.js').catch(function() {});
+            });
+        }
     </script>
 </body>
 </html>

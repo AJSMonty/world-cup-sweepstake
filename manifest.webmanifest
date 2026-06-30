@@ -1,0 +1,16 @@
+{
+  "name": "Berks Footy — World Cup 2026",
+  "short_name": "Berks Footy",
+  "description": "Live World Cup 2026 knockout bracket and Berks Footy sweepstake — who's still in, today's fixtures and the running payouts.",
+  "start_url": "./?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0c0a06",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
