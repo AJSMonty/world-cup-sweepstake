@@ -1,0 +1,115 @@
+{
+  "_comment": "EDIT THIS FILE to update the page. Set a match 'winner' to the 3-letter code of the team that advanced (penalties count). Set a prize 'code' to a team code, or null for TBD. Commit on GitHub and the page updates within ~30s.",
+  "knockoutMatches": [
+    {
+      "a": "RSA",
+      "b": "CAN",
+      "winner": "CAN"
+    },
+    {
+      "a": "BRA",
+      "b": "JPN",
+      "winner": "BRA"
+    },
+    {
+      "a": "GER",
+      "b": "PAR",
+      "winner": "PAR"
+    },
+    {
+      "a": "NED",
+      "b": "MAR",
+      "winner": "MAR"
+    },
+    {
+      "a": "CIV",
+      "b": "NOR",
+      "winner": null
+    },
+    {
+      "a": "FRA",
+      "b": "SWE",
+      "winner": null
+    },
+    {
+      "a": "MEX",
+      "b": "ECU",
+      "winner": null
+    },
+    {
+      "a": "ENG",
+      "b": "COD",
+      "winner": null
+    },
+    {
+      "a": "BEL",
+      "b": "SEN",
+      "winner": null
+    },
+    {
+      "a": "USA",
+      "b": "BIH",
+      "winner": null
+    },
+    {
+      "a": "ESP",
+      "b": "AUT",
+      "winner": null
+    },
+    {
+      "a": "POR",
+      "b": "CRO",
+      "winner": null
+    },
+    {
+      "a": "SUI",
+      "b": "ALG",
+      "winner": null
+    },
+    {
+      "a": "AUS",
+      "b": "EGY",
+      "winner": null
+    },
+    {
+      "a": "ARG",
+      "b": "CPV",
+      "winner": null
+    },
+    {
+      "a": "COL",
+      "b": "GHA",
+      "winner": null
+    }
+  ],
+  "dynamicPrizes": {
+    "winner": {
+      "code": null,
+      "status": "TBD — favourite: 🇫🇷 France (~+250)"
+    },
+    "runnerUp": {
+      "code": null,
+      "status": "TBD — next: 🇦🇷 Argentina (~+430)"
+    },
+    "thirdPlace": {
+      "code": null,
+      "status": "TBD — chasing: 🇪🇸 Spain / England (~+700)"
+    },
+    "woodenSpoon": {
+      "code": "TUN",
+      "status": "LOCKED: worst record 0 pts, -10 GD (Group F)"
+    },
+    "hammering": {
+      "code": "GER",
+      "status": "Leading: 7-1 win vs Curaçao, +6 margin (Group E)"
+    },
+    "longestGoal": {
+      "code": null,
+      "status": "TBD — watch the knockouts"
+    },
+    "dirtiestTeam": {
+      "code": "RSA",
+      "status": "Leading: worst conduct score -12 (group stage)"
+    }
+  }
+}
