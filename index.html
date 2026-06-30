@@ -667,8 +667,14 @@
                     ctx.stroke();
 
                     if (n.team) {
-                        ctx.font = '14px sans-serif'; ctx.textAlign = 'center';
-                        ctx.fillText(n.team.flag, n.x, n.y + 2); 
+                        // Center the flag exactly in its circle. textAlign
+                        // 'center' + textBaseline 'middle' at (n.x, n.y) does
+                        // this geometrically, so it holds at every breakpoint
+                        // (the canvas scales uniformly via object-fit: contain).
+                        ctx.font = '14px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(n.team.flag, n.x, n.y);
                     }
                 });
             }
