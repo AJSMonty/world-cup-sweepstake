@@ -9,7 +9,7 @@
     {
       "a": "FRA",
       "b": "SWE",
-      "winner": null
+      "winner": "FRA"
     },
     {
       "a": "RSA",
@@ -54,7 +54,7 @@
     {
       "a": "MEX",
       "b": "ECU",
-      "winner": null
+      "winner": "MEX"
     },
     {
       "a": "ENG",
