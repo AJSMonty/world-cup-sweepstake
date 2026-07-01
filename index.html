@@ -12,14 +12,14 @@
     <meta property="og:url" content="https://ajsmonty.github.io/world-cup-sweepstake/" />
     <!-- Large image card. 1200x630 JPEG committed in the repo. Bump ?v= when you
          regenerate the image so WhatsApp/social re-fetch it instead of caching. -->
-    <meta property="og:image" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=1" />
-    <meta property="og:image:secure_url" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=1" />
+    <meta property="og:image" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=2" />
+    <meta property="og:image:secure_url" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=2" />
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="World Cup 2026 live knockout bracket and Berks Footy sweepstake dashboard" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=1" />
+    <meta name="twitter:image" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=2" />
 
     <!-- ===== Installable app (PWA) ===== -->
     <link rel="manifest" href="manifest.webmanifest" />
@@ -116,10 +116,10 @@
         /* SWEEPSTAKE LEDGER (Top Right Panel) */
         .ledger-container {
             position: absolute;
-            top: 4%;
+            top: 33%;
             right: 3%;
             width: 600px;
-            height: 53%;
+            height: 29%;
             background: rgba(12, 12, 12, 0.9);
             border: 2px solid #333;
             border-radius: 12px;
@@ -135,7 +135,7 @@
             bottom: 4%;
             right: 3%;
             width: 600px;
-            height: 36%;
+            height: 32%;
             background: rgba(12, 12, 12, 0.9);
             border: 2px solid #333;
             border-radius: 12px;
@@ -145,13 +145,13 @@
             flex-direction: column;
         }
 
-        /* TODAY'S FIXTURES (under the header, left) */
+        /* TODAY'S FIXTURES (top of the right-hand column, above the ledger) */
         .fixtures-container {
             position: absolute;
-            top: 15%;
-            left: 3%;
-            width: 340px;
-            max-height: 40%;
+            top: 4%;
+            right: 3%;
+            width: 600px;
+            height: 28%;
             background: rgba(12, 12, 12, 0.92);
             border: 2px solid #333;
             border-radius: 12px;
@@ -166,7 +166,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 10px;
-            padding: 9px 2px;
+            padding: 7px 2px;
             border-bottom: 1px solid rgba(255,255,255,0.07);
         }
         .fixture-row:last-child { border-bottom: none; }
