@@ -41,6 +41,12 @@ code and rewrite `status`. Leave `code` as `null` to show "TBD".
 Team codes are the `code` values inside `masterTeams` in `index.html`
 (FRA, ARG, ESP, ENG, BRA, MAR, etc.).
 
+**Every time you edit anything above** — also bump `lastUpdated` at the top of
+`data.json` to the current UTC time (`YYYY-MM-DDTHH:MM:SSZ`). It drives the
+small "Last updated" label shown in the bottom-right corner of both pages
+(the main site and `/bcs`), so people can see at a glance how fresh the data
+is.
+
 ## WhatsApp preview image
 
 The link card already shows a large image — `preview.jpg` (1200×630) in the repo

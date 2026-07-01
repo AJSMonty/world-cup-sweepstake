@@ -228,6 +228,22 @@
             cursor: pointer; padding: 0 2px 2px;
         }
 
+        /* Subtle "last updated" timestamp, bottom-right corner */
+        .last-updated {
+            position: fixed;
+            right: 10px;
+            bottom: 6px;
+            z-index: 4;
+            font-size: 11px;
+            letter-spacing: 0.3px;
+            color: rgba(255, 255, 255, 0.32);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        @media (max-width: 1100px) {
+            .last-updated { position: static; text-align: center; margin: 4px 0 20px; order: 7; }
+        }
+
         .panel-header {
             background: linear-gradient(180deg, #2a2211, #100e08);
             border-bottom: 2px solid #d4af37;
@@ -456,6 +472,8 @@
             </div>
     </div>
 
+    <div class="last-updated" id="last-updated"></div>
+
     <div class="a2hs" id="a2hs" role="dialog" aria-label="Add to Home Screen">
         <img class="a2hs-icon" src="icon-192.png" alt="" />
         <div class="a2hs-text">
@@ -528,6 +546,11 @@
             { a: 'SUI', b: 'ALG', winner: null }, // M85 - Jul 2, Vancouver
             { a: 'COL', b: 'GHA', winner: null }  // M87 - Jul 3, Kansas City
         ];
+
+        // Timestamp of the last edit to data.json (ISO 8601 UTC), shown as the
+        // small "Last updated" corner label. Fallback only; the live value
+        // comes from data.json's "lastUpdated" field.
+        var lastUpdated = null;
 
         // 3. NOVELTY NO-LIVE-TRACKING PRIZE UPDATES
         // Type the team code and descriptive text manually for the special context payouts.
@@ -1158,10 +1181,21 @@
             if (legendToday) legendToday.style.display = isToday ? 'flex' : 'none';
         }
 
+        function renderLastUpdated() {
+            var el = document.getElementById('last-updated');
+            if (!el) return;
+            var d = lastUpdated ? new Date(lastUpdated) : null;
+            if (!d || isNaN(d.getTime())) { el.textContent = ''; return; }
+            var datePart = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'Europe/London' });
+            var timePart = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
+            el.textContent = 'Last updated ' + datePart + ', ' + timePart + ' UK';
+        }
+
         function init() {
             processStandings();
             buildTree();
             refreshFixtures();
+            renderLastUpdated();
             requestAnimationFrame(render);
         }
 
@@ -1174,6 +1208,7 @@
                 if (data && Array.isArray(data.knockoutMatches)) knockoutMatches = data.knockoutMatches;
                 if (data && data.dynamicPrizes) dynamicPrizes = data.dynamicPrizes;
                 if (data && Array.isArray(data.fixtures)) fixtures = data.fixtures;
+                if (data && typeof data.lastUpdated === 'string') lastUpdated = data.lastUpdated;
             })
             .catch(function() { /* use embedded fallback defaults */ })
             .then(init);
