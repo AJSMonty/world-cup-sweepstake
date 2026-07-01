@@ -85,15 +85,15 @@
   "dynamicPrizes": {
     "winner": {
       "code": null,
-      "status": "TBD — favourite: 🇫🇷 France (~5/2)"
+      "status": "TBD — favourite: France (~5/2)"
     },
     "runnerUp": {
       "code": null,
-      "status": "TBD — next: 🇦🇷 Argentina (~9/2)"
+      "status": "TBD — next: Argentina (~9/2)"
     },
     "thirdPlace": {
       "code": null,
-      "status": "TBD — chasing: 🇪🇸 Spain / England (~7/1)"
+      "status": "TBD — chasing: Spain / England (~7/1)"
     },
     "woodenSpoon": {
       "code": "IRQ",

@@ -12,14 +12,14 @@
     <meta property="og:url" content="https://ajsmonty.github.io/world-cup-sweepstake/" />
     <!-- Large image card. 1200x630 JPEG committed in the repo. Bump ?v= when you
          regenerate the image so WhatsApp/social re-fetch it instead of caching. -->
-    <meta property="og:image" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=2" />
-    <meta property="og:image:secure_url" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=2" />
+    <meta property="og:image" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=3" />
+    <meta property="og:image:secure_url" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=3" />
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="World Cup 2026 live knockout bracket and Berks Footy sweepstake dashboard" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=2" />
+    <meta name="twitter:image" content="https://ajsmonty.github.io/world-cup-sweepstake/preview.jpg?v=3" />
 
     <!-- ===== Installable app (PWA) ===== -->
     <link rel="manifest" href="manifest.webmanifest" />
@@ -292,10 +292,23 @@
             font-size: 14px;
         }
         .team-flag {
-            font-size: 16px;
             margin-right: 10px;
             width: 24px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Real flag images (not emoji) — Windows doesn't render country flag
+           emoji as pictures in any browser, so every flag on this site is a
+           bundled image drawn "object-fit: cover" into a small rounded chip. */
+        .flag-ico {
+            display: inline-block;
+            width: 20px;
+            height: 15px;
+            object-fit: cover;
+            border-radius: 2px;
+            vertical-align: middle;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.15);
         }
         .team-info {
             flex: 1;
@@ -389,7 +402,7 @@
             .section-title { font-size: 14px; }
             .grid-list { grid-template-columns: 1fr; }
             .team-row { font-size: 13px; padding: 6px 8px; }
-            .team-flag { font-size: 15px; margin-right: 8px; width: 20px; }
+            .team-flag { margin-right: 8px; width: 20px; }
             .team-owner { font-size: 12px; }
             /* Stack each prize so long status text never overflows */
             .prize-row { flex-direction: column; align-items: flex-start; gap: 4px; }
@@ -519,9 +532,9 @@
         // 3. NOVELTY NO-LIVE-TRACKING PRIZE UPDATES
         // Type the team code and descriptive text manually for the special context payouts.
         var dynamicPrizes = {
-            winner:       { code: null,  status: "TBD — favourite: 🇫🇷 France (~5/2)" },
-            runnerUp:     { code: null,  status: "TBD — next: 🇦🇷 Argentina (~9/2)" },
-            thirdPlace:   { code: null,  status: "TBD — chasing: 🇪🇸 Spain / 🏴󠁧󠁢󠁥󠁮󠁧󠁿 England (~7/1)" },
+            winner:       { code: null,  status: "TBD — favourite: France (~5/2)" },
+            runnerUp:     { code: null,  status: "TBD — next: Argentina (~9/2)" },
+            thirdPlace:   { code: null,  status: "TBD — chasing: Spain / England (~7/1)" },
             woodenSpoon:  { code: 'IRQ', status: "LOCKED: worst group-stage record" },
             hammering:    { code: 'CUR', status: "Leading: lost 1-7 to Germany, -6 margin (Group E)" },
             longestGoal:  { code: 'CPV', status: "Leading: Kevin Pina ~30.8m vs Uruguay — longest of the tournament (group stage)" },
@@ -581,54 +594,54 @@
         // MASTER SWEEPSTAKE DATABASE (All 48 Teams from Image)
         // ------------------------------------------------------------------
         var masterTeams = [
-            { code: 'MEX', name: 'MEXICO', flag: '🇲🇽', owner: 'Tom C' },
-            { code: 'RSA', name: 'SOUTH AFRICA', flag: '🇿🇦', owner: 'Harry B' },
-            { code: 'KOR', name: 'SOUTH KOREA', flag: '🇰🇷', owner: 'Jasper' },
-            { code: 'CZE', name: 'CZECHIA', flag: '🇨🇿', owner: 'Jack' },
-            { code: 'CAN', name: 'CANADA', flag: '🇨🇦', owner: 'Giles S' },
-            { code: 'QAT', name: 'QATAR', flag: '🇶🇦', owner: 'Will B' },
-            { code: 'SUI', name: 'SWITZERLAND', flag: '🇨🇭', owner: 'Oli R' },
-            { code: 'BIH', name: 'BOSNIA & HERZ.', flag: '🇧🇦', owner: 'Will R' },
-            { code: 'BRA', name: 'BRAZIL', flag: '🇧🇷', owner: 'Bryan' },
-            { code: 'MAR', name: 'MOROCCO', flag: '🇲🇦', owner: 'Biffa' },
-            { code: 'HAI', name: 'HAITI', flag: '🇭🇹', owner: 'Jimmy' },
-            { code: 'SCO', name: 'SCOTLAND', flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', owner: 'Nick S-S' },
-            { code: 'USA', name: 'UNITED STATES', flag: '🇺🇸', owner: 'Matthew' },
-            { code: 'PAR', name: 'PARAGUAY', flag: '🇵🇾', owner: 'Nick S' },
-            { code: 'AUS', name: 'AUSTRALIA', flag: '🇦🇺', owner: 'Marty' },
-            { code: 'TUR', name: 'TÜRKIYE', flag: '🇹🇷', owner: 'Nick S-S' },
-            { code: 'GER', name: 'GERMANY', flag: '🇩🇪', owner: 'Nat' },
-            { code: 'CUR', name: 'CURACAO', flag: '🇨🇼', owner: 'Oli R' },
-            { code: 'CIV', name: 'IVORY COAST', flag: '🇨🇮', owner: 'Fred P' },
-            { code: 'ECU', name: 'ECUADOR', flag: '🇪🇨', owner: 'AJ' },
-            { code: 'NED', name: 'NETHERLANDS', flag: '🇳🇱', owner: 'Charlie' },
-            { code: 'JPN', name: 'JAPAN', flag: '🇯🇵', owner: 'Nick S' },
-            { code: 'TUN', name: 'TUNISIA', flag: '🇹🇳', owner: 'Charlie' },
-            { code: 'SWE', name: 'SWEDEN', flag: '🇸🇪', owner: 'Matthew' },
-            { code: 'BEL', name: 'BELGIUM', flag: '🇧🇪', owner: 'AJ' },
-            { code: 'EGY', name: 'EGYPT', flag: '🇪🇬', owner: 'Tom V' },
-            { code: 'IRN', name: 'IRAN', flag: '🇮🇷', owner: 'Fred T' },
-            { code: 'NZL', name: 'NEW ZEALAND', flag: '🇳🇿', owner: 'Jimmy' },
-            { code: 'ESP', name: 'SPAIN', flag: '🇪🇸', owner: 'Will K' },
-            { code: 'CPV', name: 'CAPE VERDE', flag: '🇨🇻', owner: 'Luke' },
-            { code: 'URU', name: 'URUGUAY', flag: '🇺🇾', owner: 'Tom B' },
-            { code: 'KSA', name: 'SAUDI ARABIA', flag: '🇸🇦', owner: 'Harry B' },
-            { code: 'FRA', name: 'FRANCE', flag: '🇫🇷', owner: 'Marty' },
-            { code: 'SEN', name: 'SENEGAL', flag: '🇸🇳', owner: 'Will B' },
-            { code: 'NOR', name: 'NORWAY', flag: '🇳🇴', owner: 'Henry M' },
-            { code: 'IRQ', name: 'IRAQ', flag: '🇮🇶', owner: 'Sam W' },
-            { code: 'ARG', name: 'ARGENTINA', flag: '🇦🇷', owner: 'Ed G' },
-            { code: 'ALG', name: 'ALGERIA', flag: '🇩🇿', owner: 'Will K' },
-            { code: 'AUT', name: 'AUSTRIA', flag: '🇦🇹', owner: 'Luke' },
-            { code: 'JOR', name: 'JORDAN', flag: '🇯🇴', owner: 'Sam G' },
-            { code: 'POR', name: 'PORTUGAL', flag: '🇵🇹', owner: 'Toby' },
-            { code: 'COD', name: 'DR CONGO', flag: '🇨🇩', owner: 'Sam G' },
-            { code: 'UZB', name: 'UZBEKISTAN', flag: '🇺🇿', owner: 'Toby' },
-            { code: 'COL', name: 'COLOMBIA', flag: '🇨🇴', owner: 'Tom B' },
-            { code: 'ENG', name: 'ENGLAND', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', owner: 'Giles G-S' },
-            { code: 'CRO', name: 'CROATIA', flag: '🇭🇷', owner: 'Alex' },
-            { code: 'GHA', name: 'GHANA', flag: '🇬🇭', owner: 'Sam W' },
-            { code: 'PAN', name: 'PANAMA', flag: '🇵🇦', owner: 'Ed G' }
+            { code: 'MEX', name: 'MEXICO', flag: 'flags/MEX.svg', owner: 'Tom C' },
+            { code: 'RSA', name: 'SOUTH AFRICA', flag: 'flags/RSA.svg', owner: 'Harry B' },
+            { code: 'KOR', name: 'SOUTH KOREA', flag: 'flags/KOR.svg', owner: 'Jasper' },
+            { code: 'CZE', name: 'CZECHIA', flag: 'flags/CZE.svg', owner: 'Jack' },
+            { code: 'CAN', name: 'CANADA', flag: 'flags/CAN.svg', owner: 'Giles S' },
+            { code: 'QAT', name: 'QATAR', flag: 'flags/QAT.svg', owner: 'Will B' },
+            { code: 'SUI', name: 'SWITZERLAND', flag: 'flags/SUI.svg', owner: 'Oli R' },
+            { code: 'BIH', name: 'BOSNIA & HERZ.', flag: 'flags/BIH.svg', owner: 'Will R' },
+            { code: 'BRA', name: 'BRAZIL', flag: 'flags/BRA.svg', owner: 'Bryan' },
+            { code: 'MAR', name: 'MOROCCO', flag: 'flags/MAR.svg', owner: 'Biffa' },
+            { code: 'HAI', name: 'HAITI', flag: 'flags/HAI.svg', owner: 'Jimmy' },
+            { code: 'SCO', name: 'SCOTLAND', flag: 'flags/SCO.svg', owner: 'Nick S-S' },
+            { code: 'USA', name: 'UNITED STATES', flag: 'flags/USA.svg', owner: 'Matthew' },
+            { code: 'PAR', name: 'PARAGUAY', flag: 'flags/PAR.svg', owner: 'Nick S' },
+            { code: 'AUS', name: 'AUSTRALIA', flag: 'flags/AUS.svg', owner: 'Marty' },
+            { code: 'TUR', name: 'TÜRKIYE', flag: 'flags/TUR.svg', owner: 'Nick S-S' },
+            { code: 'GER', name: 'GERMANY', flag: 'flags/GER.svg', owner: 'Nat' },
+            { code: 'CUR', name: 'CURACAO', flag: 'flags/CUR.svg', owner: 'Oli R' },
+            { code: 'CIV', name: 'IVORY COAST', flag: 'flags/CIV.svg', owner: 'Fred P' },
+            { code: 'ECU', name: 'ECUADOR', flag: 'flags/ECU.svg', owner: 'AJ' },
+            { code: 'NED', name: 'NETHERLANDS', flag: 'flags/NED.svg', owner: 'Charlie' },
+            { code: 'JPN', name: 'JAPAN', flag: 'flags/JPN.svg', owner: 'Nick S' },
+            { code: 'TUN', name: 'TUNISIA', flag: 'flags/TUN.svg', owner: 'Charlie' },
+            { code: 'SWE', name: 'SWEDEN', flag: 'flags/SWE.svg', owner: 'Matthew' },
+            { code: 'BEL', name: 'BELGIUM', flag: 'flags/BEL.svg', owner: 'AJ' },
+            { code: 'EGY', name: 'EGYPT', flag: 'flags/EGY.svg', owner: 'Tom V' },
+            { code: 'IRN', name: 'IRAN', flag: 'flags/IRN.svg', owner: 'Fred T' },
+            { code: 'NZL', name: 'NEW ZEALAND', flag: 'flags/NZL.svg', owner: 'Jimmy' },
+            { code: 'ESP', name: 'SPAIN', flag: 'flags/ESP.svg', owner: 'Will K' },
+            { code: 'CPV', name: 'CAPE VERDE', flag: 'flags/CPV.svg', owner: 'Luke' },
+            { code: 'URU', name: 'URUGUAY', flag: 'flags/URU.svg', owner: 'Tom B' },
+            { code: 'KSA', name: 'SAUDI ARABIA', flag: 'flags/KSA.svg', owner: 'Harry B' },
+            { code: 'FRA', name: 'FRANCE', flag: 'flags/FRA.svg', owner: 'Marty' },
+            { code: 'SEN', name: 'SENEGAL', flag: 'flags/SEN.svg', owner: 'Will B' },
+            { code: 'NOR', name: 'NORWAY', flag: 'flags/NOR.svg', owner: 'Henry M' },
+            { code: 'IRQ', name: 'IRAQ', flag: 'flags/IRQ.svg', owner: 'Sam W' },
+            { code: 'ARG', name: 'ARGENTINA', flag: 'flags/ARG.svg', owner: 'Ed G' },
+            { code: 'ALG', name: 'ALGERIA', flag: 'flags/ALG.svg', owner: 'Will K' },
+            { code: 'AUT', name: 'AUSTRIA', flag: 'flags/AUT.svg', owner: 'Luke' },
+            { code: 'JOR', name: 'JORDAN', flag: 'flags/JOR.svg', owner: 'Sam G' },
+            { code: 'POR', name: 'PORTUGAL', flag: 'flags/POR.svg', owner: 'Toby' },
+            { code: 'COD', name: 'DR CONGO', flag: 'flags/COD.svg', owner: 'Sam G' },
+            { code: 'UZB', name: 'UZBEKISTAN', flag: 'flags/UZB.svg', owner: 'Toby' },
+            { code: 'COL', name: 'COLOMBIA', flag: 'flags/COL.svg', owner: 'Tom B' },
+            { code: 'ENG', name: 'ENGLAND', flag: 'flags/ENG.svg', owner: 'Giles G-S' },
+            { code: 'CRO', name: 'CROATIA', flag: 'flags/CRO.svg', owner: 'Alex' },
+            { code: 'GHA', name: 'GHANA', flag: 'flags/GHA.svg', owner: 'Sam W' },
+            { code: 'PAN', name: 'PANAMA', flag: 'flags/PAN.svg', owner: 'Ed G' }
         ];
 
         // ------------------------------------------------------------------
@@ -683,11 +696,18 @@
             renderPrizes();
         }
 
+        // team.flag is a path to a bundled flag image (see masterTeams) — this
+        // renders it as a small <img> chip, which works identically on every
+        // platform (unlike emoji flags, which Windows doesn't draw as pictures).
+        function flagImgTag(team) {
+            return '<img class="flag-ico" src="' + team.flag + '" alt="' + team.code + '">';
+        }
+
         function renderList(elementId, list, isElim) {
             var html = '';
             list.forEach(function(team) {
                 html += '<div class="team-row' + (isElim ? ' eliminated-row' : '') + '">' +
-                            '<div class="team-flag">' + team.flag + '</div>' +
+                            '<div class="team-flag">' + flagImgTag(team) + '</div>' +
                             '<div class="team-info">' +
                                 '<span class="team-name">' + team.name + '</span>' +
                                 '<span class="team-owner">' + team.owner + '</span>' +
@@ -719,7 +739,7 @@
                 if (config.code) {
                     var t = masterTeams.find(function(item) { return item.code === config.code; });
                     if (t) {
-                        displayTeam = t.flag + ' ' + t.name;
+                        displayTeam = flagImgTag(t) + ' ' + t.name;
                         displayOwner = t.owner + ' (' + config.status + ')';
                     }
                 }
@@ -747,7 +767,7 @@
             segments = [];
             
             var initialNodes = qualifiedTeamCodes.map(function(code, i) {
-                var teamObj = masterTeams.find(function(t) { return t.code === code; }) || { name: code, flag: '🏳️' };
+                var teamObj = masterTeams.find(function(t) { return t.code === code; }) || { code: code, name: code, flag: '' };
                 var angle = angleOffset + i * step;
                 return { team: teamObj, angle: angle, x: cx + Math.cos(angle) * R[0], y: cy + Math.sin(angle) * R[0] };
             });
@@ -848,96 +868,38 @@
             ctx.stroke();
         }
 
-        // Flag emoji don't sit at the same place inside the text box on every
-        // platform — Apple Color Emoji (all iOS browsers, incl. iOS Chrome,
-        // which is WebKit) renders noticeably off-centre when you rely on
-        // textBaseline 'middle'. So instead of trusting the font's metrics, we
-        // measure each glyph's real ink box once and offset the draw point so
-        // that box's centre lands exactly on the circle centre. Font-agnostic,
-        // so it's centred whatever emoji font the device uses. Cached per glyph
-        // because measureText on colour emoji isn't free at 60fps.
-        var flagOffsetCache = {};
-        function flagDrawOffset(flag, font) {
-            var key = font + '|' + flag;
-            if (key in flagOffsetCache) return flagOffsetCache[key];
-            ctx.save();
-            ctx.font = font;
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'alphabetic';
-            var m = ctx.measureText(flag);
-            ctx.restore();
-            var off = null;
-            var L = m.actualBoundingBoxLeft, Rt = m.actualBoundingBoxRight;
-            var A = m.actualBoundingBoxAscent, D = m.actualBoundingBoxDescent;
-            if (typeof L === 'number' && typeof Rt === 'number' &&
-                typeof A === 'number' && typeof D === 'number' && (A + D) > 0) {
-                // Ink box: left = x-L, right = x+Rt, top = y-A, bottom = y+D
-                // (drawn with textAlign 'left', textBaseline 'alphabetic').
-                // Shift so the box centre is at the target point.
-                off = { dx: -(Rt - L) / 2, dy: -(D - A) / 2 };
+        // Flags are real bundled images (see masterTeams), not emoji — Windows
+        // doesn't render country flag emoji as pictures in ANY browser there
+        // (Segoe UI Emoji ships no flag glyphs), so relying on the OS font was
+        // unreliable across platforms. Images are loaded once and cached, then
+        // drawn "object-fit: cover" into each node circle: scaled so the flag's
+        // shorter side covers the circle's diameter, centred, and clipped round.
+        var FLAG_ASPECT = 4 / 3; // all bundled flags are 4x3
+        var flagImageCache = {};
+        function getFlagImage(src) {
+            if (!src) return null;
+            if (!(src in flagImageCache)) {
+                var img = new Image();
+                img.src = src;
+                flagImageCache[src] = img;
             }
-            flagOffsetCache[key] = off;
-            return off;
+            return flagImageCache[src];
         }
 
-        function drawCenteredFlag(flag, x, y, font) {
-            var off = flagDrawOffset(flag, font);
-            ctx.font = font;
-            if (off) {
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'alphabetic';
-                ctx.fillText(flag, x + off.dx, y + off.dy);
-            } else {
-                // Fallback for browsers without ink-box metrics.
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(flag, x, y);
-            }
-        }
-
-        // Measure a flag's ink box once at a large base size so we can scale it.
-        var coverFlagCache = {};
-        function coverFlagInfo(flag) {
-            if (flag in coverFlagCache) return coverFlagCache[flag];
-            var base = 100;
-            ctx.save();
-            ctx.font = base + 'px sans-serif';
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'alphabetic';
-            var m = ctx.measureText(flag);
-            ctx.restore();
-            var L = m.actualBoundingBoxLeft, Rt = m.actualBoundingBoxRight;
-            var A = m.actualBoundingBoxAscent, D = m.actualBoundingBoxDescent;
-            var info = null;
-            if (typeof L === 'number' && typeof Rt === 'number' &&
-                typeof A === 'number' && typeof D === 'number' &&
-                (Rt + L) > 0 && (A + D) > 0) {
-                info = { base: base, w: Rt + L, h: A + D, ix: (Rt - L) / 2, iy: (D - A) / 2 };
-            }
-            coverFlagCache[flag] = info;
-            return info;
-        }
-
-        // Draw the flag so it fills the circle like object-fit: cover — scale so
-        // the flag's shorter side covers the diameter, centre it, and clip to a
-        // circle so it stays nicely round (corners cropped, no letterboxing).
-        function drawCoverFlag(flag, x, y, r) {
-            var info = coverFlagInfo(flag);
+        function drawCoverFlag(src, x, y, r) {
+            var img = getFlagImage(src);
             ctx.save();
             ctx.beginPath();
             ctx.arc(x, y, r, 0, Math.PI * 2);
             ctx.clip();
-            if (info) {
-                var scale = (2 * r) / Math.min(info.w, info.h) * 1.04;
-                ctx.font = (info.base * scale) + 'px sans-serif';
-                ctx.textAlign = 'left';
-                ctx.textBaseline = 'alphabetic';
-                ctx.fillText(flag, x - info.ix * scale, y - info.iy * scale);
+            if (img && img.complete && img.naturalWidth > 0) {
+                var h = 2 * r, w = h * FLAG_ASPECT;
+                ctx.drawImage(img, x - w / 2, y - h / 2, w, h);
             } else {
-                ctx.font = (r * 1.9) + 'px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(flag, x, y);
+                // Not loaded yet (or missing) — leave a blank chip; the next
+                // animation frame retries automatically once the image loads.
+                ctx.fillStyle = 'rgba(255,255,255,0.06)';
+                ctx.fillRect(x - r, y - r, 2 * r, 2 * r);
             }
             ctx.restore();
         }
@@ -1161,8 +1123,8 @@
                     if (aT) todayPlayingCodes[aT.code] = true;
                     if (bT) todayPlayingCodes[bT.code] = true;
                 }
-                var aName = aT ? (aT.flag + ' ' + aT.name) : 'TBD';
-                var bName = bT ? (bT.flag + ' ' + bT.name) : 'TBD';
+                var aName = aT ? (flagImgTag(aT) + ' ' + aT.name) : 'TBD';
+                var bName = bT ? (flagImgTag(bT) + ' ' + bT.name) : 'TBD';
                 var aCls = (winner && aT) ? (winner === aT.code ? ' won' : ' lost') : '';
                 var bCls = (winner && bT) ? (winner === bT.code ? ' won' : ' lost') : '';
                 var right = winner ? '<span class="fixture-ft">FT</span>'
