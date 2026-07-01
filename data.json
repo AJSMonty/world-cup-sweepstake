@@ -1,6 +1,6 @@
 {
   "_comment": "EDIT THIS FILE to update the page. Matches are in bracket order. Set a match 'winner' to the 3-letter code of the team that advanced (penalties count). Set a prize 'code' to a team code, or null for TBD. Commit on GitHub and the page updates within ~30s. IMPORTANT: also bump 'lastUpdated' to the current UTC time (YYYY-MM-DDTHH:MM:SSZ) whenever you edit anything below — it drives the 'Last updated' label shown on both pages.",
-  "lastUpdated": "2026-07-01T11:02:27Z",
+  "lastUpdated": "2026-07-01T14:19:30Z",
   "knockoutMatches": [
     {
       "a": "GER",
@@ -111,6 +111,14 @@
     "dirtiestTeam": {
       "code": "RSA",
       "status": "Leading: worst conduct score -12 (group stage)"
+    },
+    "dirtiestPerformance": {
+      "code": "RSA",
+      "status": "Leading: 8 booking points in a single match (red=3, yellow=1); ties broken by most fouls"
+    },
+    "latestGoal": {
+      "code": "TUR",
+      "status": "Leading: Kaan Ayhan, 98' vs USA — the latest goal of the tournament so far (group stage)"
     }
   },
   "_fixtures_comment": "Whole remaining knockout schedule. Teams are NOT listed — each fixture points at a bracket slot (level + pair: competitors are tree[level][2*pair] and tree[level][2*pair+1], winner advances to tree[level+1][pair]) so they fill in automatically. type 'third' = 3rd-place play-off (the two semi-final losers). 'date' is the match-day; small-hours UK kick-offs belong to that match-day's overnight window.",
