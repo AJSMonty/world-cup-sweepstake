@@ -414,7 +414,7 @@
 
     <div class="fixtures-container" id="fixtures-panel" style="display:none;">
         <div class="panel-header">
-            <h3>Today's Fixtures</h3>
+            <h3 id="fixtures-title">Today's Fixtures</h3>
             <p id="fixtures-date">—</p>
         </div>
         <div class="panel-body" id="fixtures-list"></div>
@@ -536,8 +536,10 @@
         //   level/pair: competitors are tree[level][2*pair] and tree[level][2*pair+1];
         //               the winner advances to tree[level+1][pair].
         //   type:'third' is the 3rd-place play-off (the two semi-final losers).
-        // 'date' is the match-day; 'time' is the UK kick-off. Small-hours kick-offs
-        // belong to that match-day's overnight window (see getMatchday).
+        // 'date' is the match-day; 'time' is the UK kick-off (small-hours times are
+        // that match-day's overnight games). The panel shows the earliest match-day
+        // that still has an unplayed game, so it rolls forward automatically once a
+        // slate finishes (see refreshFixtures).
         var fixtures = [
             // Round of 32 (level 0)
             { round: 'Round of 32', level: 0, pair: 1,  date: '2026-06-30', time: '10:00pm', venue: 'East Rutherford' },
@@ -1075,31 +1077,13 @@
         // ------------------------------------------------------------------
         var todayPlayingCodes = {};
 
-        function shiftDate(ymd, delta) {
-            var d = new Date(ymd + 'T12:00:00Z');
-            d.setUTCDate(d.getUTCDate() + delta);
-            return d.toISOString().slice(0, 10);
-        }
-
-        // The "current match-day". A World Cup match-day in the UK runs overnight,
-        // so anything kicking off before ~6am still belongs to the previous
-        // evening's slate — e.g. a 2am game counts as today's fixture. ?date=
-        // overrides for previewing any day.
-        function getMatchday() {
+        // The viewer's current date in UK time. ?date=YYYY-MM-DD overrides it,
+        // to preview any match-day.
+        function ukCalendarToday() {
             var q = (location.search.match(/[?&]date=(\d{4}-\d{2}-\d{2})/) || [])[1];
             if (q) return q;
-            var now = new Date();
-            var ukDate, ukHour;
-            try {
-                ukDate = now.toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
-                ukHour = parseInt(new Intl.DateTimeFormat('en-GB', {
-                    timeZone: 'Europe/London', hour: 'numeric', hourCycle: 'h23'
-                }).format(now), 10);
-            } catch (e) {
-                ukDate = now.toISOString().slice(0, 10);
-                ukHour = now.getUTCHours();
-            }
-            return ukHour < 6 ? shiftDate(ukDate, -1) : ukDate;
+            try { return new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' }); }
+            catch (e) { return new Date().toISOString().slice(0, 10); }
         }
 
         function kickoffSortKey(t) {
@@ -1136,16 +1120,44 @@
         }
 
         function refreshFixtures() {
-            var today = getMatchday();
-            var list = fixtures.filter(function(f) { return f.date === today; })
+            var override = (location.search.match(/[?&]date=(\d{4}-\d{2}-\d{2})/) || [])[1];
+            var calToday = ukCalendarToday();
+
+            function fixturesOn(d) {
+                return fixtures.filter(function(f) { return f.date === d; })
                                .sort(function(a, b) { return kickoffSortKey(a.time) - kickoffSortKey(b.time); });
+            }
+            function hasUnplayed(d) {
+                return fixturesOn(d).some(function(f) { return resolveFixture(f).winner === null; });
+            }
+
+            // Which match-day to show: a forced ?date, else the earliest slate
+            // that still has an unplayed game. That keeps a slate up while its
+            // (possibly overnight) games are pending, then rolls forward the
+            // moment they're all done — so the morning after shows the next day,
+            // and rest days look ahead to the next fixtures.
+            var target = override || null;
+            if (!target) {
+                var dates = fixtures.map(function(f) { return f.date; })
+                                    .filter(function(v, i, a) { return a.indexOf(v) === i; })
+                                    .sort();
+                for (var i = 0; i < dates.length; i++) {
+                    if (hasUnplayed(dates[i])) { target = dates[i]; break; }
+                }
+                if (!target && dates.length) target = dates[dates.length - 1]; // all played: show the last
+            }
+
+            var list = target ? fixturesOn(target) : [];
+            // "Today" if the shown slate is the current day or an overnight
+            // continuation of it; future slates read as "Upcoming".
+            var isToday = !!target && target <= calToday;
 
             todayPlayingCodes = {};
             var html = '';
             list.forEach(function(f) {
                 var res = resolveFixture(f);
                 var aT = res.a, bT = res.b, winner = res.winner;
-                if (!winner) {
+                if (!winner && isToday) {
                     if (aT) todayPlayingCodes[aT.code] = true;
                     if (bT) todayPlayingCodes[bT.code] = true;
                 }
@@ -1169,17 +1181,19 @@
 
             var panel = document.getElementById('fixtures-panel');
             var legendToday = document.getElementById('legend-today');
+            var title = document.getElementById('fixtures-title');
             if (!list.length) {
                 if (panel) panel.style.display = 'none';
                 if (legendToday) legendToday.style.display = 'none';
                 return;
             }
+            if (title) title.innerText = isToday ? "Today's Fixtures" : 'Upcoming Fixtures';
             document.getElementById('fixtures-list').innerHTML = html;
-            var d = new Date(today + 'T12:00:00Z');
+            var d = new Date(target + 'T12:00:00Z');
             document.getElementById('fixtures-date').innerText =
                 d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }) + ' · UK kick-off';
             if (panel) panel.style.display = 'flex';
-            if (legendToday) legendToday.style.display = 'flex';
+            if (legendToday) legendToday.style.display = isToday ? 'flex' : 'none';
         }
 
         function init() {
