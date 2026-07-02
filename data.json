@@ -1,6 +1,6 @@
 {
   "_comment": "EDIT THIS FILE to update the page. Matches are in bracket order. Set a match 'winner' to the 3-letter code of the team that advanced (penalties count). Set a prize 'code' to a team code, or null for TBD. Commit on GitHub and the page updates within ~30s. IMPORTANT: also bump 'lastUpdated' to the current UTC time (YYYY-MM-DDTHH:MM:SSZ) whenever you edit anything below — it drives the 'Last updated' label shown on both pages.",
-  "lastUpdated": "2026-07-01T18:04:51Z",
+  "lastUpdated": "2026-07-02T02:47:06Z",
   "knockoutMatches": [
     {
       "a": "GER",
@@ -35,12 +35,12 @@
     {
       "a": "USA",
       "b": "BIH",
-      "winner": null
+      "winner": "USA"
     },
     {
       "a": "BEL",
       "b": "SEN",
-      "winner": null
+      "winner": "BEL"
     },
     {
       "a": "BRA",
