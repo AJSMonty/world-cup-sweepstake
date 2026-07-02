@@ -190,6 +190,29 @@
             box-shadow: 0 0 10px rgba(255, 216, 120, 0.85);
         }
 
+        /* Gentle entrance: panels drift up and fade in on load, staggered. */
+        .fixtures-container, .ledger-container, .prizes-container {
+            animation: panel-in 0.7s cubic-bezier(0.22, 0.8, 0.36, 1) both;
+        }
+        .ledger-container { animation-delay: 0.12s; }
+        .prizes-container { animation-delay: 0.24s; }
+        @keyframes panel-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        /* Soft hover lift on list rows (desktop nicety; harmless on touch). */
+        .team-row, .fixture-row, .prize-row { transition: background-color 0.18s ease; }
+        .team-row:hover { background: rgba(255, 255, 255, 0.10); }
+        .fixture-row:hover { background: rgba(255, 255, 255, 0.04); }
+
+        /* Respect users who prefer minimal motion (canvas spin/pulses are
+           frozen in JS via the same media query). */
+        @media (prefers-reduced-motion: reduce) {
+            .fixtures-container, .ledger-container, .prizes-container { animation: none; }
+            .team-row, .fixture-row, .prize-row { transition: none; }
+        }
+
         /* "Add to Home Screen" install banner (mobile only, dismissible) */
         .a2hs {
             position: fixed;
@@ -929,19 +952,32 @@
             ctx.restore();
         }
 
-        function drawNodesAndText() {
+        function drawNodesAndText(rot) {
             ctx.textBaseline = 'middle';
             ctx.font = 'bold 13px sans-serif';
-            
+            var TAU = Math.PI * 2;
+
             tree[0].forEach(function(n) {
                 var x = cx + Math.cos(n.angle) * (R[0] + 25);
                 var y = cy + Math.sin(n.angle) * (R[0] + 25);
                 ctx.save();
                 ctx.translate(x, y);
-                var a = n.angle % (Math.PI * 2);
-                if (a < 0) a += Math.PI * 2;
+                var a = n.angle % TAU;
+                if (a < 0) a += TAU;
+                // The context is already rotated by the tree's slow spin, so a
+                // label's on-screen angle is (a + rot). Flip 180° in the left
+                // half-circle — i.e. whenever it crosses 12 or 6 o'clock — so
+                // names always read left-to-right.
+                var eff = (a + rot) % TAU;
+                if (eff < 0) eff += TAU;
+                // Soften the flip: fade the label out/in within ~4° of the
+                // 12/6 o'clock boundaries instead of snapping.
+                var d90  = Math.min(Math.abs(eff - Math.PI / 2), TAU - Math.abs(eff - Math.PI / 2));
+                var d270 = Math.min(Math.abs(eff - 3 * Math.PI / 2), TAU - Math.abs(eff - 3 * Math.PI / 2));
+                var boundaryDist = Math.min(d90, d270);
+                ctx.globalAlpha = Math.min(1, boundaryDist / 0.07);
                 ctx.fillStyle = '#ccc';
-                if (a > Math.PI / 2 && a < 3 * Math.PI / 2) {
+                if (eff > Math.PI / 2 && eff < 3 * Math.PI / 2) {
                     ctx.rotate(a + Math.PI); ctx.textAlign = 'right';
                     ctx.fillText(n.team.name, 0, 0);
                 } else {
@@ -958,7 +994,7 @@
 
                     // Subtle breathing gold halo marks teams playing today.
                     if (playingToday) {
-                        var pulse = 0.5 + 0.5 * Math.sin(animClock * 3);
+                        var pulse = REDUCED_MOTION ? 0.6 : 0.5 + 0.5 * Math.sin(animClock * 3);
                         ctx.save();
                         ctx.beginPath();
                         ctx.arc(n.x, n.y, 18 + pulse * 2.5, 0, Math.PI * 2);
@@ -994,34 +1030,54 @@
         var startTime = Date.now();
         var animClock = 0; // seconds since start, shared with the today-highlight
 
+        // Honour the user's OS-level motion preference: freeze the spin, vein
+        // pulses and halo breathing (the bracket still renders fully, static).
+        var REDUCED_MOTION = window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // The whole tree revolves slowly about the trophy — one full turn
+        // every ROTATION_PERIOD seconds. ?rot=<degrees> pre-spins it (handy
+        // for previewing label behaviour at any orientation).
+        var ROTATION_PERIOD = 240;
+        var rotOffset = (parseFloat((location.search.match(/[?&]rot=(-?\d+(?:\.\d+)?)/) || [])[1]) || 0) * Math.PI / 180;
+
         function render() {
             var elapsed = (Date.now() - startTime) / 1000;
             animClock = elapsed;
+            var rot = rotOffset + (REDUCED_MOTION ? 0 : (elapsed * Math.PI * 2 / ROTATION_PERIOD));
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+
             var grad = ctx.createRadialGradient(cx, cy, 10, cx, cy, 800);
             grad.addColorStop(0, 'rgba(50, 38, 14, 0.4)'); grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Warm golden bloom behind the bracket centre, blooming up from the
             // trophy base — sits under the veins so the trophy reads as lit.
+            // It breathes very gently so the centre feels alive.
+            var breathe = REDUCED_MOTION ? 1 : (0.92 + 0.08 * Math.sin(elapsed * 0.6));
             var gy = cy + TROPHY_H * 0.12;
             var gr = TROPHY_H * 2.15;
             var bloom = ctx.createRadialGradient(cx, gy, 4, cx, gy, gr);
-            bloom.addColorStop(0,    'rgba(255, 216, 132, 0.55)');
-            bloom.addColorStop(0.30, 'rgba(247, 190, 86, 0.28)');
-            bloom.addColorStop(0.62, 'rgba(176, 120, 34, 0.09)');
+            bloom.addColorStop(0,    'rgba(255, 216, 132, ' + (0.55 * breathe).toFixed(3) + ')');
+            bloom.addColorStop(0.30, 'rgba(247, 190, 86, '  + (0.28 * breathe).toFixed(3) + ')');
+            bloom.addColorStop(0.62, 'rgba(176, 120, 34, '  + (0.09 * breathe).toFixed(3) + ')');
             bloom.addColorStop(1,    'rgba(0, 0, 0, 0)');
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
             ctx.fillStyle = bloom; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.restore();
 
+            // Everything tree-shaped (segments, veins, nodes, labels) is built
+            // in fixed coordinates about (cx, cy), so the slow spin is a single
+            // context rotation about the centre. The trophy and bloom stay out.
+            ctx.save();
+            ctx.translate(cx, cy); ctx.rotate(rot); ctx.translate(-cx, -cy);
+
             ctx.lineCap = 'round';
             ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)'; ctx.setLineDash([]);
             segments.forEach(function(s) { if (!s.active) drawSegment(s); });
 
-            ctx.lineWidth = 3.5; ctx.strokeStyle = '#9e781d'; 
+            ctx.lineWidth = 3.5; ctx.strokeStyle = '#9e781d';
             segments.forEach(function(s) { if (s.active) drawSegment(s); });
 
             // A single bright pulse flows inward along each advancing team's
@@ -1040,15 +1096,17 @@
             veins.forEach(function(v) {
                 if (v.length <= 1) return;
                 var travel = v.length + PULSE_GAP;          // full cycle distance
-                var pos = (elapsed * PULSE_SPEED) % travel;  // pulse front position
+                var pos = REDUCED_MOTION ? PULSE_LEN : (elapsed * PULSE_SPEED) % travel;
                 ctx.lineDashOffset = -pos;                   // negative = move forward (inward)
                 ctx.stroke(v.path);
             });
             ctx.restore();
 
             ctx.setLineDash([]); ctx.shadowBlur = 0;
-            drawNodesAndText();
-            
+            drawNodesAndText(rot);
+
+            ctx.restore(); // end of rotating frame
+
             if (trophyLoaded) {
                 // Preserve the trophy's true aspect ratio (no stretching).
                 var tw = TROPHY_H * (trophyImg.width / trophyImg.height);
