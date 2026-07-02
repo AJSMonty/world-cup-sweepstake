@@ -30,8 +30,11 @@ set its `winner` to the 3-letter code of the team that went through
 (penalties count):
 
 ```json
-{ "a": "FRA", "b": "SWE", "winner": null }   ->   { "a": "FRA", "b": "SWE", "winner": "FRA" }
+{ "a": "FRA", "b": "SWE", "winner": null }   ->   { "a": "FRA", "b": "SWE", "winner": "FRA", "score": "3-0" }
 ```
+
+`score` is optional but nice: winner-first (`"2-1"`, `"1-1 (4-3p)"` for pens,
+`"3-2 aet"`), shown as a tiny label on the bracket at that tie.
 
 The bracket, the Remaining/Out lists and the counts all redraw themselves.
 

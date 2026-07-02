@@ -12,14 +12,14 @@
     <meta property="og:url" content="https://ajsmonty.github.io/world-cup-sweepstake/bcs/" />
     <!-- Large image card. 1200x630 JPEG committed in this folder. Bump ?v= when you
          regenerate the image so WhatsApp/social re-fetch it instead of caching. -->
-    <meta property="og:image" content="https://ajsmonty.github.io/world-cup-sweepstake/bcs/preview.jpg?v=4" />
-    <meta property="og:image:secure_url" content="https://ajsmonty.github.io/world-cup-sweepstake/bcs/preview.jpg?v=4" />
+    <meta property="og:image" content="https://ajsmonty.github.io/world-cup-sweepstake/bcs/preview.jpg?v=5" />
+    <meta property="og:image:secure_url" content="https://ajsmonty.github.io/world-cup-sweepstake/bcs/preview.jpg?v=5" />
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="World Cup 2026 live knockout bracket and BCS sweepstake dashboard" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://ajsmonty.github.io/world-cup-sweepstake/bcs/preview.jpg?v=4" />
+    <meta name="twitter:image" content="https://ajsmonty.github.io/world-cup-sweepstake/bcs/preview.jpg?v=5" />
 
     <!-- ===== Installable app (PWA) ===== -->
     <link rel="manifest" href="manifest.webmanifest" />
@@ -113,54 +113,33 @@
             border-color: #444;
         }
 
-        /* SWEEPSTAKE LEDGER (Top Right Panel) */
-        .ledger-container {
-            position: absolute;
-            top: 33%;
-            right: 3%;
-            width: 600px;
-            height: 29%;
-            background: rgba(12, 12, 12, 0.9);
-            border: 2px solid #333;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* PRIZE PREDICTOR (Bottom Right Panel) */
-        .prizes-container {
-            position: absolute;
-            bottom: 4%;
-            right: 3%;
-            width: 600px;
-            height: 32%;
-            background: rgba(12, 12, 12, 0.9);
-            border: 2px solid #333;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* TODAY'S FIXTURES (top of the right-hand column, above the ledger) */
-        .fixtures-container {
+        /* RIGHT-HAND COLUMN — one flex stack, top to bottom: Today's Fixtures
+           and Payouts hug their content (no dead space), then the team ledger
+           fills whatever height remains and scrolls internally. */
+        .side-col {
             position: absolute;
             top: 4%;
             right: 3%;
+            bottom: 4%;
             width: 600px;
-            height: 28%;
-            background: rgba(12, 12, 12, 0.92);
-            border: 2px solid #333;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
             z-index: 10;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            gap: 14px;
         }
+        .fixtures-container, .ledger-container, .prizes-container {
+            background: rgba(12, 12, 12, 0.9);
+            border: 2px solid #333;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .fixtures-container { flex: 0 0 auto; } /* always shows every fixture */
+        .prizes-container   { flex: 0 1 auto; } /* content height; scrolls if squeezed */
+        .ledger-container   { flex: 1 1 0; min-height: 150px; } /* fills the rest, scrolls */
         .fixture-row {
             display: flex;
             align-items: center;
@@ -194,8 +173,8 @@
         .fixtures-container, .ledger-container, .prizes-container {
             animation: panel-in 0.7s cubic-bezier(0.22, 0.8, 0.36, 1) both;
         }
-        .ledger-container { animation-delay: 0.12s; }
-        .prizes-container { animation-delay: 0.24s; }
+        .prizes-container { animation-delay: 0.12s; }
+        .ledger-container { animation-delay: 0.24s; }
         @keyframes panel-in {
             from { opacity: 0; transform: translateY(10px); }
             to   { opacity: 1; transform: none; }
@@ -404,8 +383,13 @@
             canvas             { order: 2; }
             .fixtures-container { order: 3; }
             .legend            { order: 4; }
-            .ledger-container  { order: 5; }
-            .prizes-container  { order: 6; }
+            .prizes-container  { order: 5; }
+            .ledger-container  { order: 6; }
+
+            /* Dissolve the desktop column wrapper so the panels become
+               direct flex children of body and the order rules above apply. */
+            .side-col { display: contents; }
+            .fixtures-container, .ledger-container, .prizes-container { flex: none; }
 
             .fixtures-container {
                 position: static; width: 92%; max-width: 600px;
@@ -464,35 +448,37 @@
         <div class="legend-item" id="legend-today" style="display:none;"><div class="dot today"></div> Playing Today</div>
     </div>
 
-    <div class="fixtures-container" id="fixtures-panel" style="display:none;">
-        <div class="panel-header">
-            <h3 id="fixtures-title">Today's Fixtures</h3>
-            <p id="fixtures-date">—</p>
-        </div>
-        <div class="panel-body" id="fixtures-list"></div>
-    </div>
-
-    <div class="ledger-container">
-        <div class="panel-header">
-            <h3>BCS Sweepstake</h3>
-            <p>Live Dashboard Configuration</p>
-        </div>
-        <div class="panel-body">
-            <div class="section-title">🏆 Remaining In Tournament (<span id="active-count">0</span>)</div>
-            <div id="active-list" class="grid-list"></div>
-            
-            <div class="section-title eliminated">❌ Out of Tournament (<span id="elim-count">0</span>)</div>
-            <div id="eliminated-list" class="grid-list"></div>
-        </div>
-    </div>
-
-    <div class="prizes-container">
-        <div class="panel-header">
-            <h3>Live Sweepstake Payouts</h3>
-            <p>Total Pot: £21,500</p>
-        </div>
-        <div class="panel-body" id="prizes-list">
+    <div class="side-col">
+        <div class="fixtures-container" id="fixtures-panel" style="display:none;">
+            <div class="panel-header">
+                <h3 id="fixtures-title">Today's Fixtures</h3>
+                <p id="fixtures-date">—</p>
             </div>
+            <div class="panel-body" id="fixtures-list"></div>
+        </div>
+
+        <div class="prizes-container">
+            <div class="panel-header">
+                <h3>Live Sweepstake Payouts</h3>
+                <p>Total Pot: £21,500</p>
+            </div>
+            <div class="panel-body" id="prizes-list">
+                </div>
+        </div>
+
+        <div class="ledger-container">
+            <div class="panel-header">
+                <h3>BCS Sweepstake</h3>
+                <p>Live Dashboard Configuration</p>
+            </div>
+            <div class="panel-body">
+                <div class="section-title">🏆 Remaining In Tournament (<span id="active-count">0</span>)</div>
+                <div id="active-list" class="grid-list"></div>
+
+                <div class="section-title eliminated">❌ Out of Tournament (<span id="elim-count">0</span>)</div>
+                <div id="eliminated-list" class="grid-list"></div>
+            </div>
+        </div>
     </div>
 
     <div class="last-updated" id="last-updated"></div>
@@ -550,20 +536,22 @@
         // 2. DEFINE THE KNOCKOUT MATCHES & WINNERS
         // Match pairs are grouped sequentially (0 vs 1, 2 vs 3, etc.).
         // Change 'winner' from null to the 3-letter code (e.g., winner: 'RSA') as games finish.
+        // 'score' is the winner-first scoreline shown subtly on the bracket
+        // (e.g. '2-1', '1-1 (4-3p)' for pens, '3-2 aet' for extra time).
         // Listed in bracket order to match qualifiedTeamCodes above.
         var knockoutMatches = [
-            { a: 'GER', b: 'PAR', winner: 'PAR' }, // M74 - Paraguay won 1-1 (4-3 pens) (Jun 29)
-            { a: 'FRA', b: 'SWE', winner: 'FRA' }, // M77 - France won 3-0 (Jun 30, East Rutherford)
-            { a: 'RSA', b: 'CAN', winner: 'CAN' }, // M73 - Canada won 1-0 (Jun 28)
-            { a: 'NED', b: 'MAR', winner: 'MAR' }, // M75 - Morocco won 1-1 (3-2 pens) (Jun 29)
+            { a: 'GER', b: 'PAR', winner: 'PAR', score: '1-1 (4-3p)' }, // M74 (Jun 29)
+            { a: 'FRA', b: 'SWE', winner: 'FRA', score: '3-0' },        // M77 (Jun 30, East Rutherford)
+            { a: 'RSA', b: 'CAN', winner: 'CAN', score: '1-0' },        // M73 (Jun 28)
+            { a: 'NED', b: 'MAR', winner: 'MAR', score: '1-1 (3-2p)' }, // M75 (Jun 29)
             { a: 'POR', b: 'CRO', winner: null }, // M83 - Jul 2, Toronto
             { a: 'ESP', b: 'AUT', winner: null }, // M84 - Jul 2, Inglewood
-            { a: 'USA', b: 'BIH', winner: 'USA' }, // M81 - USA won 2-0 (Balogun, Tillman) (Jul 1, Santa Clara)
-            { a: 'BEL', b: 'SEN', winner: 'BEL' }, // M82 - Belgium won 3-2 AET (Tielemans pen, 124') (Jul 1, Seattle)
-            { a: 'BRA', b: 'JPN', winner: 'BRA' }, // M76 - Brazil won 2-1 (Jun 29)
-            { a: 'CIV', b: 'NOR', winner: 'NOR' }, // M78 - Norway won 2-1 (Jun 30, Dallas)
-            { a: 'MEX', b: 'ECU', winner: 'MEX' }, // M79 - Mexico won 2-0 (Jun 30, Mexico City)
-            { a: 'ENG', b: 'COD', winner: 'ENG' }, // M80 - England won 2-1 (Kane x2) (Jul 1, Atlanta)
+            { a: 'USA', b: 'BIH', winner: 'USA', score: '2-0' },        // M81 (Jul 1, Santa Clara)
+            { a: 'BEL', b: 'SEN', winner: 'BEL', score: '3-2 aet' },    // M82 (Jul 1, Seattle)
+            { a: 'BRA', b: 'JPN', winner: 'BRA', score: '2-1' },        // M76 (Jun 29)
+            { a: 'CIV', b: 'NOR', winner: 'NOR', score: '2-1' },        // M78 (Jun 30, Dallas)
+            { a: 'MEX', b: 'ECU', winner: 'MEX', score: '2-0' },        // M79 (Jun 30, Mexico City)
+            { a: 'ENG', b: 'COD', winner: 'ENG', score: '2-1' },        // M80 (Jul 1, Atlanta)
             { a: 'ARG', b: 'CPV', winner: null }, // M86 - Jul 3, Miami Gardens
             { a: 'AUS', b: 'EGY', winner: null }, // M88 - Jul 3, Arlington
             { a: 'SUI', b: 'ALG', winner: null }, // M85 - Jul 2, Vancouver
@@ -808,11 +796,14 @@
 
         var tree = [];
         var segments = [];
+        var tieAnchors = [];        // per-tie label anchors (score / kick-off time)
+        var todayTimesBySlot = {};  // 'level:pair' -> kick-off time for today's unplayed ties
         var step = (Math.PI * 2) / 32;
         var angleOffset = Math.PI - 7.5 * step;
 
         function buildTree() {
             segments = [];
+            tieAnchors = [];
             
             var initialNodes = qualifiedTeamCodes.map(function(code, i) {
                 var teamObj = masterTeams.find(function(t) { return t.code === code; }) || { code: code, name: code, flag: '' };
@@ -830,8 +821,9 @@
                     var midAngle = (n1.angle + n2.angle) / 2;
                     
                     var winnerTeam = null;
+                    var match = null;
                     if (n1.team && n2.team) {
-                        var match = knockoutMatches.find(function(m) {
+                        match = knockoutMatches.find(function(m) {
                             return (m.a === n1.team.code && m.b === n2.team.code) || (m.b === n1.team.code && m.a === n2.team.code);
                         });
                         if (match && match.winner) {
@@ -839,7 +831,13 @@
                         }
                     }
 
-                    var node = { team: winnerTeam, angle: midAngle, x: cx + Math.cos(midAngle) * R[r], y: cy + Math.sin(midAngle) * R[r] };
+                    // The champion node (r === 5) sits at the exact centre so the
+                    // final is one straight line between the two finalists,
+                    // passing through (and hidden behind) the trophy — no kink
+                    // to poke out as the tree rotates.
+                    var node = (r === 5)
+                        ? { team: winnerTeam, angle: midAngle, x: cx, y: cy }
+                        : { team: winnerTeam, angle: midAngle, x: cx + Math.cos(midAngle) * R[r], y: cy + Math.sin(midAngle) * R[r] };
                     tree[r].push(node);
 
                     var r_mid = (R[r-1] + R[r]) / 2;
@@ -847,10 +845,22 @@
                     var active2 = !!(n2.team && winnerTeam && n2.team.code === winnerTeam.code);
                     var activeOut = !!(winnerTeam !== null);
 
+                    // Anchor for the tiny tie label (score once played, or
+                    // today's kick-off time): the junction elbow where the two
+                    // arcs meet. The final (r === 5) has no elbow — its label
+                    // is drawn beside the trophy instead (see render).
+                    tieAnchors.push({
+                        level: r - 1,
+                        pair: i / 2,
+                        x: cx + Math.cos(midAngle) * r_mid,
+                        y: cy + Math.sin(midAngle) * r_mid,
+                        score: (match && match.winner && match.score) ? match.score : null
+                    });
+
                     if (r === 5) {
                         segments.push({ type: 'line', x1: n1.x, y1: n1.y, x2: node.x, y2: node.y, active: active1 });
                         segments.push({ type: 'line', x1: n2.x, y1: n2.y, x2: node.x, y2: node.y, active: active2 });
-                        continue; 
+                        continue;
                     }
 
                     segments.push({ type: 'line', x1: n1.x, y1: n1.y, x2: cx + Math.cos(n1.angle) * r_mid, y2: cy + Math.sin(n1.angle) * r_mid, active: active1 });
@@ -1012,8 +1022,15 @@
                     ctx.fill();
 
                     if (n.team) {
-                        // Flag fills the circle (object-fit: cover), clipped round.
-                        drawCoverFlag(n.team.flag, n.x, n.y, 13);
+                        // Flag fills the circle (object-fit: cover), clipped
+                        // round. Counter-rotate by the tree's spin so flags
+                        // stay upright — like the fixed centre cap on a
+                        // spinning wheel.
+                        ctx.save();
+                        ctx.translate(n.x, n.y);
+                        ctx.rotate(-rot);
+                        drawCoverFlag(n.team.flag, 0, 0, 13);
+                        ctx.restore();
                     }
 
                     // Gold ring on top so the flag edge stays crisp (brighter
@@ -1025,6 +1042,38 @@
                     ctx.stroke();
                 });
             }
+
+            drawTieLabels(rot);
+        }
+
+        // Tiny labels at each tie's junction elbow: the final score once a tie
+        // is played (winner-first, dim gold), or the UK kick-off time for
+        // today's still-to-play ties (slightly brighter, so "upcoming" reads
+        // at a glance). Counter-rotated to stay horizontal, on a soft dark
+        // pill so they stay legible where lines pass underneath. The final's
+        // label is drawn beside the trophy in render() instead.
+        function drawTieLabels(rot) {
+            ctx.font = '600 10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            tieAnchors.forEach(function(t) {
+                if (t.level === 4) return;
+                var text = t.score || todayTimesBySlot[t.level + ':' + t.pair] || null;
+                if (!text) return;
+                var isTime = !t.score;
+                ctx.save();
+                ctx.translate(t.x, t.y);
+                ctx.rotate(-rot);
+                var w = ctx.measureText(text).width;
+                ctx.fillStyle = 'rgba(8, 8, 8, 0.75)';
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(-w / 2 - 5, -8, w + 10, 16, 8);
+                else ctx.rect(-w / 2 - 5, -8, w + 10, 16);
+                ctx.fill();
+                ctx.fillStyle = isTime ? 'rgba(255, 219, 128, 0.92)' : 'rgba(211, 189, 133, 0.72)';
+                ctx.fillText(text, 0, 0.5);
+                ctx.restore();
+            });
         }
 
         var startTime = Date.now();
@@ -1114,6 +1163,31 @@
                 ctx.drawImage(trophyImg, cx - tw / 2, cy - TROPHY_H / 2, tw, TROPHY_H);
                 ctx.shadowBlur = 0;
             }
+
+            // The final's own tie label (score / kick-off) floats just above
+            // the trophy, fixed in place — the straight final line has no
+            // junction elbow to hang it on.
+            var finalAnchor = null;
+            for (var fa = 0; fa < tieAnchors.length; fa++) {
+                if (tieAnchors[fa].level === 4) { finalAnchor = tieAnchors[fa]; break; }
+            }
+            if (finalAnchor) {
+                var finalText = finalAnchor.score || todayTimesBySlot['4:0'] || null;
+                if (finalText) {
+                    ctx.font = '600 10px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    var fw = ctx.measureText(finalText).width;
+                    var fy = cy - TROPHY_H / 2 - 16;
+                    ctx.fillStyle = 'rgba(8, 8, 8, 0.75)';
+                    ctx.beginPath();
+                    if (ctx.roundRect) ctx.roundRect(cx - fw / 2 - 5, fy - 8, fw + 10, 16, 8);
+                    else ctx.rect(cx - fw / 2 - 5, fy - 8, fw + 10, 16);
+                    ctx.fill();
+                    ctx.fillStyle = finalAnchor.score ? 'rgba(211, 189, 133, 0.72)' : 'rgba(255, 219, 128, 0.92)';
+                    ctx.fillText(finalText, cx, fy + 0.5);
+                }
+            }
             requestAnimationFrame(render);
         }
 
@@ -1198,6 +1272,7 @@
             var isToday = !!target && target <= calToday;
 
             todayPlayingCodes = {};
+            todayTimesBySlot = {};
             var html = '';
             list.forEach(function(f) {
                 var res = resolveFixture(f);
@@ -1205,6 +1280,10 @@
                 if (!winner && isToday) {
                     if (aT) todayPlayingCodes[aT.code] = true;
                     if (bT) todayPlayingCodes[bT.code] = true;
+                    // Surface the kick-off time on the bracket at this tie's slot.
+                    if (typeof f.level === 'number') {
+                        todayTimesBySlot[f.level + ':' + f.pair] = f.time;
+                    }
                 }
                 var aName = aT ? (flagImgTag(aT) + ' ' + aT.name) : 'TBD';
                 var bName = bT ? (flagImgTag(bT) + ' ' + bT.name) : 'TBD';
