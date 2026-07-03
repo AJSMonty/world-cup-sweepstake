@@ -32,9 +32,16 @@ const DATA_FILE = new URL("../data.json", import.meta.url);
 const DRY_RUN = process.env.DRY_RUN === "1";
 const VERBOSE = process.env.VERBOSE === "1";
 
-// Tournament window (knockouts). Used to fetch fixtures by date range.
-const WINDOW_START = "2026-06-27";
+// Full tournament window (group stage 11 Jun onward). Used to fetch fixtures by
+// date range: knockout ties drive the bracket results; the whole tournament
+// (group + knockout) drives the data-derived novelty prizes below.
+const WINDOW_START = "2026-06-11";
 const WINDOW_END = "2026-07-20";
+
+// "Latest goal" excludes extra time: Sportmonks caps the base `minute` at the
+// period boundary (90) and holds stoppage in `extra_minute`, so a 90+8 goal is
+// minute=90 and an extra-time goal is minute>90. Flip to true to count ET.
+const COUNT_EXTRA_TIME = false;
 
 // Our 3-letter code -> spellings Sportmonks might use. Matching is
 // accent/punctuation/case-insensitive, so only real differences matter.
@@ -168,17 +175,78 @@ function scoreString(fix, homeCode, awayCode, winnerCode) {
   return out;
 }
 
+// --- Novelty prizes derived from the match-events feed ---------------------
+// Sportmonks event `type.developer_name`s we care about. Real goals are open
+// play + in-play penalties; shootout goals and missed penalties are separate
+// types and must not count. Cards are yellow/red (VAR_CARD is a review marker,
+// not an extra booking — excluded to avoid double counting).
+const evType = (e) => (e.type?.developer_name || e.type?.name || "").toLowerCase();
+const isGoalEvent = (t) => /^(goal|penalty|owngoal|penalty_goal)$/.test(t);
+const cardPoints = (t) => (/red/.test(t) ? 3 : /yellow/.test(t) ? 1 : 0);
+
+// Scan the whole tournament's events once and pull out:
+//   - latestGoal: the goal with the highest minute (extra time excluded unless
+//     COUNT_EXTRA_TIME), across every finished game.
+//   - dirtiestTeam: most booking points over the tournament (red=3, yellow=1;
+//     player cards only — coach/bench cards excluded).
+//   - dirtiestPerformance: the single team-in-one-match with the most points.
+function computeNoveltyPrizes(fixtures) {
+  let latest = null;                    // { code, player, min, opp }
+  const teamPts = {}, teamCards = {};   // code -> points / { y, r }
+  let worstPerf = null;                 // { code, pts, opp }
+
+  for (const fix of fixtures) {
+    if (!FINISHED.has((fix.state?.developer_name || "").toUpperCase())) continue;
+    const codeOf = {};                  // participant_id -> our 3-letter code
+    for (const p of fix.participants || []) codeOf[p.id] = toCode(p.name);
+    const ids = Object.keys(codeOf);
+    const other = (pid) => codeOf[ids.find((i) => i !== String(pid))];
+    const perf = {};                    // participant_id -> booking points here
+
+    for (const e of fix.events || []) {
+      const t = evType(e);
+      const tc = codeOf[e.participant_id];
+      if (isGoalEvent(t)) {
+        const base = e.minute || 0;
+        if (!COUNT_EXTRA_TIME && base > 90) continue;      // skip extra time
+        const min = base + (e.extra_minute || 0);
+        if (tc && (!latest || min > latest.min)) {
+          latest = { code: tc, player: e.player_name, min, opp: other(e.participant_id) };
+        }
+      } else if ((t === "yellowcard" || t === "redcard") && !e.coach_id && tc) {
+        const pts = cardPoints(t);
+        teamPts[tc] = (teamPts[tc] || 0) + pts;
+        teamCards[tc] = teamCards[tc] || { y: 0, r: 0 };
+        teamCards[tc][t === "redcard" ? "r" : "y"]++;
+        perf[e.participant_id] = (perf[e.participant_id] || 0) + pts;
+      }
+    }
+    for (const pid of Object.keys(perf)) {
+      if (!worstPerf || perf[pid] > worstPerf.pts) {
+        worstPerf = { code: codeOf[pid], pts: perf[pid], opp: other(pid) };
+      }
+    }
+  }
+
+  // Dirtiest team: most points, ties broken by more red cards.
+  const dirty = Object.entries(teamPts).sort(
+    (a, b) => b[1] - a[1] || (teamCards[b[0]].r - teamCards[a[0]].r)
+  );
+  return { latest, dirtiestTeam: dirty[0] || null, teamCards, worstPerf };
+}
+
 async function main() {
   if (!KEY) {
-    console.log("No SPORTMONKS_KEY set — skipping, data.json unchanged.");
+    console.log("No SPORTMONKS_API_KEY set — skipping, data.json unchanged.");
     return;
   }
   console.log(DRY_RUN ? "DRY RUN — will not write data.json." : "Live run.");
 
   const leagueId = await discoverLeagueId();
 
-  // Fetch knockout-window fixtures for this league, with everything we need.
-  const inc = "include=participants;scores;state;round;stage";
+  // Fetch the whole tournament for this league: knockout ties → bracket
+  // results, and every game's events → the data-derived novelty prizes.
+  const inc = "include=participants;scores;state;round;stage;events.type";
   const filt = `filters=fixtureLeagues:${leagueId}`;
   const path = `/fixtures/between/${WINDOW_START}/${WINDOW_END}?${inc}&${filt}`;
   const fixtures = await smAll(path);
@@ -252,7 +320,8 @@ async function main() {
   const stamp = new Date().toISOString().slice(0, 10);
   const setPrize = (key, code, status) => {
     if (!code || !data.dynamicPrizes?.[key]) return;
-    if (data.dynamicPrizes[key].code !== code) {
+    const cur = data.dynamicPrizes[key];
+    if (cur.code !== code || cur.status !== status) {
       data.dynamicPrizes[key] = { code, status };
       changed++;
     }
@@ -267,6 +336,31 @@ async function main() {
   if (thirdFix && FINISHED.has((thirdFix.state?.developer_name || "").toUpperCase())) {
     const { homeCode, awayCode } = homeAwayCodes(thirdFix);
     setPrize("thirdPlace", winnerCode(thirdFix, homeCode, awayCode), `Won the 3rd-place play-off (auto ${stamp})`);
+  }
+
+  // Data-derived novelty prizes (latest goal + dirtiest team/performance).
+  // The wooden spoon, biggest hammering and longest-distance goal have no clean
+  // events feed (goal distance in particular isn't in the API), so those stay
+  // hand-set in data.json and are left untouched here.
+  const nov = computeNoveltyPrizes(fixtures);
+  if (nov.latest) {
+    const vs = nov.latest.opp ? ` vs ${nov.latest.opp}` : "";
+    setPrize("latestGoal", nov.latest.code,
+      `Leading: ${nov.latest.player}, ${nov.latest.min}'${vs} — the latest goal of the tournament so far`);
+    console.log(`  latest goal: ${nov.latest.code} ${nov.latest.player} ${nov.latest.min}'`);
+  }
+  if (nov.dirtiestTeam) {
+    const [code, pts] = nov.dirtiestTeam;
+    const c = nov.teamCards[code];
+    setPrize("dirtiestTeam", code,
+      `Leading: ${pts} booking points — ${c.y} yellow, ${c.r} red (red=3, yellow=1)`);
+    console.log(`  dirtiest team: ${code} ${pts}pts (${c.y}y ${c.r}r)`);
+  }
+  if (nov.worstPerf && nov.worstPerf.code) {
+    const vs = nov.worstPerf.opp ? ` vs ${nov.worstPerf.opp}` : "";
+    setPrize("dirtiestPerformance", nov.worstPerf.code,
+      `Leading: ${nov.worstPerf.pts} booking points in one match${vs} (red=3, yellow=1)`);
+    console.log(`  dirtiest performance: ${nov.worstPerf.code} ${nov.worstPerf.pts}pts${vs}`);
   }
 
   if (!changed) {

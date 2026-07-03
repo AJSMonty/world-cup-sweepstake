@@ -99,9 +99,24 @@ the novelty prizes, or prize amounts. The live site picks the change up within
 
 Public repos get unlimited Actions minutes, so this is completely free.
 
-**What it never touches.** The novelty prizes (wooden spoon, biggest hammering,
-longest goal, dirtiest, latest goal) have no clean data feed, so you still set
-those by hand in `data.json`'s `dynamicPrizes`.
+**Novelty prizes it now sets from the events feed.** As results come in it also
+recomputes, across the whole tournament (group stage + knockouts):
+
+- **Latest goal** — the goal scored at the highest minute. Extra time is
+  *excluded* by default (set `COUNT_EXTRA_TIME = true` in the script to count
+  it), and penalty-shootout goals never count.
+- **Dirtiest team** — most booking points (red = 3, yellow = 1; player cards
+  only, coach/bench and VAR-review cards excluded), ties broken by red cards.
+- **Dirtiest performance** — the single team-in-one-match with the most points.
+
+These are recomputed from scratch every run (no running tally to drift), so a
+rescinded card or corrected score self-heals on the next run.
+
+**What it never touches.** The **wooden spoon** and **biggest hammering** are
+left manual (the spoon is already locked; hammerings are rare after the group
+stage), and the **longest-distance goal** *can't* be automated — Sportmonks'
+feed carries the minute, scorer and shot type but no shot distance/coordinates,
+so you still eyeball that one and set it by hand in `dynamicPrizes`.
 
 **Things to know.**
 
