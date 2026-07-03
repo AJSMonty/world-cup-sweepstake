@@ -245,6 +245,12 @@
         @media (max-width: 1100px) {
             .last-updated { position: static; text-align: center; margin: 4px 0 20px; order: 7; }
         }
+        /* Brief green pulse when a live poll pulls in fresh results. */
+        @keyframes lu-flash {
+            0%   { color: rgba(120, 230, 160, 0.95); }
+            100% { color: rgba(255, 255, 255, 0.32); }
+        }
+        .last-updated.just-updated { animation: lu-flash 2.4s ease-out; }
 
         .panel-header {
             background: linear-gradient(180deg, #2a2211, #100e08);
@@ -1338,19 +1344,58 @@
             requestAnimationFrame(render);
         }
 
-        // Load the live data file, then start. Cache-busted so a fresh
-        // commit shows up without a hard refresh. Falls back silently to the
-        // embedded defaults above if data.json isn't reachable.
-        fetch('data.json?t=' + Date.now())
-            .then(function(res) { return res.ok ? res.json() : Promise.reject(new Error('no data.json')); })
-            .then(function(data) {
-                if (data && Array.isArray(data.knockoutMatches)) knockoutMatches = data.knockoutMatches;
-                if (data && data.dynamicPrizes) dynamicPrizes = data.dynamicPrizes;
-                if (data && Array.isArray(data.fixtures)) fixtures = data.fixtures;
-                if (data && typeof data.lastUpdated === 'string') lastUpdated = data.lastUpdated;
-            })
-            .catch(function() { /* use embedded fallback defaults */ })
-            .then(init);
+        // Load the live data file, then start. Cache-busted so a fresh commit
+        // shows up without a hard refresh. Falls back silently to the embedded
+        // defaults above if data.json isn't reachable.
+        function applyData(data) {
+            if (data && Array.isArray(data.knockoutMatches)) knockoutMatches = data.knockoutMatches;
+            if (data && data.dynamicPrizes) dynamicPrizes = data.dynamicPrizes;
+            if (data && Array.isArray(data.fixtures)) fixtures = data.fixtures;
+            if (data && typeof data.lastUpdated === 'string') lastUpdated = data.lastUpdated;
+        }
+        function fetchData() {
+            return fetch('data.json?t=' + Date.now(), { cache: 'no-store' })
+                .then(function(res) { return res.ok ? res.json() : Promise.reject(new Error('no data.json')); });
+        }
+        // Re-apply data and redraw everything that depends on it. The rotation
+        // loop (requestAnimationFrame) keeps running on its own, so the bracket
+        // updates in place — no flash, no reset.
+        function rerenderData() {
+            processStandings();
+            buildTree();
+            refreshFixtures();
+            renderLastUpdated();
+            var el = document.getElementById('last-updated');
+            if (el) { el.classList.remove('just-updated'); void el.offsetWidth; el.classList.add('just-updated'); }
+        }
+
+        fetchData().then(applyData).catch(function() { /* embedded fallback */ }).then(init);
+
+        // Live auto-refresh. GitHub Pages is static — there's no SSE/WebSocket to
+        // push — but the data only changes when the updater commits (~every 30
+        // min), so we re-check data.json on a timer and redraw in place the
+        // moment its lastUpdated changes. No manual refresh needed. Polling is
+        // paused while the tab is hidden and fires immediately when it's shown
+        // again, so what you're looking at is always current.
+        (function() {
+            var POLL_MS = 60000;
+            var timer = null;
+            function poll() {
+                if (document.hidden) return;
+                fetchData().then(function(data) {
+                    if (data && typeof data.lastUpdated === 'string' && data.lastUpdated !== lastUpdated) {
+                        applyData(data);
+                        rerenderData();
+                    }
+                }).catch(function() {});
+            }
+            function start() { if (!timer) timer = setInterval(poll, POLL_MS); }
+            function stop() { if (timer) { clearInterval(timer); timer = null; } }
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) stop(); else { poll(); start(); }
+            });
+            start();
+        })();
 
         // Register the service worker so the site is installable to the home
         // screen (PWA) and loads instantly / works offline. Fails silently on
