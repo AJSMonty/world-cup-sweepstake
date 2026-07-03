@@ -21,15 +21,15 @@ on:
       dry_run:
         description: "Dry run (fetch + log only, don't commit)"
         type: boolean
-        default: true
+        default: false
       verbose:
         description: "Verbose (print a sample fixture for debugging)"
         type: boolean
         default: false
   # Uncomment to run automatically once validated. Every 30 min is plenty for
   # half/full-time results; tighten to */15 during match days if you like.
-  # schedule:
-  #   - cron: "*/30 * * * *"
+  schedule:
+    - cron: "*/30 * * * *"
 
 permissions:
   contents: write
