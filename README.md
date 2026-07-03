@@ -75,13 +75,15 @@ resulting `data.json` is committed.
 World Cup knockout fixtures, and updates `data.json` **in place**:
 
 - sets each finished tie's `winner` and `score` (winner-first, e.g. `2-1`,
-  `1-1 (4-3p)` for pens, `3-2 aet`), and
+  `1-1 (4-3p)` for pens, `3-2 aet`) — **through the whole knockout tree**, not
+  just the Round of 32: it appends a slot for each later-round tie (R16 →
+  final) as its teams become known, so winners advance automatically, and
 - sets the **tournament winner / runner-up / 3rd place** prize codes once those
   games are played, and bumps `lastUpdated`.
 
-It only ever writes those fields — it never touches bracket order, the fixtures
-schedule, owners, the novelty prizes, or prize amounts. The live site picks the
-change up within ~30s. Both the main site and `/bcs` share this one `data.json`.
+It only writes those fields — it never touches the fixtures schedule, owners,
+the novelty prizes, or prize amounts. The live site picks the change up within
+~30s. Both the main site and `/bcs` share this one `data.json`.
 
 **One-time setup + validation.**
 

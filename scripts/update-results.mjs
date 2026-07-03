@@ -5,10 +5,12 @@
 // knockout `winner` + `score` for finished ties, and the tournament
 // winner / runner-up / 3rd-place prize codes once those games are played.
 //
-// It UPDATES IN PLACE: it only ever writes `winner`/`score` on existing
-// knockoutMatches entries (matched by the two team codes) and a few prize
-// `code`s. It NEVER touches bracket order, the fixtures schedule, owners,
-// the novelty prizes, or the prize amounts — those stay exactly as they are.
+// It UPDATES IN PLACE: it writes `winner`/`score` on matching knockoutMatches
+// entries (matched by the two team codes) and appends a new entry for each
+// later-round tie (R16 -> final) once its teams are known, plus a few prize
+// `code`s. It NEVER touches the fixtures schedule, owners, the novelty prizes,
+// or the prize amounts — those stay exactly as they are. This is what carries
+// the auto-update through the whole knockout tree, not just the Round of 32.
 //
 // No npm dependencies (Node 20+ built-in fetch). On any error, missing key,
 // or zero fixtures it exits cleanly and leaves data.json untouched.
@@ -216,19 +218,35 @@ async function main() {
     finished++;
     const w = winnerCode(fix, homeCode, awayCode);
     const sc = scoreString(fix, homeCode, awayCode, w);
-    byPair.set(pairKey(homeCode, awayCode), { winner: w, score: sc });
+    byPair.set(pairKey(homeCode, awayCode), { winner: w, score: sc, a: homeCode, b: awayCode });
     console.log(`  ${homeCode} v ${awayCode}: ${w || "?"} (${sc || "no score"}) [${stateName}]`);
   }
   console.log(`Knockout ties recognised: ${matched}, finished: ${finished}.`);
 
   // Update data.json in place.
   const data = JSON.parse(await readFile(DATA_FILE, "utf8"));
+  data.knockoutMatches = data.knockoutMatches || [];
   let changed = 0;
-  for (const m of data.knockoutMatches || []) {
+  const seen = new Set();
+  for (const m of data.knockoutMatches) {
+    seen.add(pairKey(m.a, m.b));
     const hit = byPair.get(pairKey(m.a, m.b));
     if (!hit || !hit.winner) continue;
     if (m.winner !== hit.winner) { m.winner = hit.winner; changed++; }
     if (hit.score && m.score !== hit.score) { m.score = hit.score; changed++; }
+  }
+
+  // Later rounds (R16 → final) have no slot until their teams are known — the
+  // frontend derives each round's nodes from the previous round's winners and
+  // then looks up the tie by team code. So APPEND any finished tie we don't yet
+  // have a slot for; the bracket matches it (lookup is order-independent) and
+  // the winner advances into the next round. This is what carries the auto-
+  // update through the whole knockout tree, not just the Round of 32.
+  for (const [key, hit] of byPair) {
+    if (seen.has(key) || !hit.winner) continue;
+    data.knockoutMatches.push({ a: hit.a, b: hit.b, winner: hit.winner, score: hit.score || null });
+    changed++;
+    console.log(`  + new tie ${hit.a} v ${hit.b}: ${hit.winner} (${hit.score || "no score"})`);
   }
 
   const stamp = new Date().toISOString().slice(0, 10);
