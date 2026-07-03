@@ -14,7 +14,8 @@
 // or zero fixtures it exits cleanly and leaves data.json untouched.
 //
 // Env:
-//   SPORTMONKS_KEY         (required)  API token — set as a GitHub Actions secret.
+//   SPORTMONKS_API_KEY     (required)  API token — set as a GitHub Actions secret.
+//                                      (SPORTMONKS_KEY is also accepted.)
 //   SPORTMONKS_LEAGUE_ID   (optional)  Pin the World Cup league id (skip discovery).
 //   SPORTMONKS_SEASON_ID   (optional)  Pin the 2026 season id (skip discovery).
 //   DRY_RUN=1              (optional)  Fetch + log, but don't write data.json.
@@ -23,7 +24,7 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 
-const KEY = process.env.SPORTMONKS_KEY;
+const KEY = process.env.SPORTMONKS_API_KEY || process.env.SPORTMONKS_KEY;
 const BASE = "https://api.sportmonks.com/v3/football";
 const DATA_FILE = new URL("../data.json", import.meta.url);
 const DRY_RUN = process.env.DRY_RUN === "1";
@@ -45,7 +46,8 @@ const ALIASES = {
   CUR: ["curacao", "curaçao"], CIV: ["ivory coast", "cote divoire", "côte divoire"],
   ECU: ["ecuador"], NED: ["netherlands"], JPN: ["japan"], TUN: ["tunisia"],
   SWE: ["sweden"], BEL: ["belgium"], EGY: ["egypt"], IRN: ["iran", "iran islamic republic"],
-  NZL: ["new zealand"], ESP: ["spain"], CPV: ["cape verde", "cabo verde"],
+  NZL: ["new zealand"], ESP: ["spain"], MEX: ["mexico"],
+  CPV: ["cape verde", "cape verde islands", "cabo verde"],
   URU: ["uruguay"], KSA: ["saudi arabia"], FRA: ["france"], SEN: ["senegal"],
   NOR: ["norway"], IRQ: ["iraq"], ARG: ["argentina"], ALG: ["algeria"],
   AUT: ["austria"], JOR: ["jordan"], POR: ["portugal"],
@@ -195,7 +197,10 @@ async function main() {
   let matched = 0, finished = 0;
 
   for (const fix of fixtures) {
-    const roundName = fix.round?.name || fix.stage?.name || "";
+    // Sportmonks labels knockout phases via stage.name ("Round of 32",
+    // "Quarter-finals", "Final", ...) with round.name null; group games have a
+    // numeric round.name and stage.name "Group Stage". Prefer stage.name.
+    const roundName = fix.stage?.name || fix.round?.name || "";
     if (!isKnockoutRound(roundName)) continue;
     const { homeCode, awayCode } = homeAwayCodes(fix);
     if (!homeCode || !awayCode) {

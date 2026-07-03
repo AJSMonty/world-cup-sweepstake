@@ -3,12 +3,12 @@ name: Update results (Sportmonks)
 # Pulls knockout results (winner + score) from the Sportmonks API and commits
 # data.json. The live GitHub Pages site picks up the new data within ~30s.
 #
-# The API key lives ONLY in the repo secret SPORTMONKS_KEY (Settings ->
+# The API key lives ONLY in the repo secret SPORTMONKS_API_KEY (Settings ->
 # Secrets and variables -> Actions). It is never written to the repo, the
 # committed data, or the browser — the fetch happens here on GitHub's runner.
 #
 # SETUP / VALIDATION (do this before enabling the schedule):
-#   1. Add the secret SPORTMONKS_KEY.
+#   1. Add the secret SPORTMONKS_API_KEY.
 #   2. Actions -> "Update results (Sportmonks)" -> Run workflow, with
 #      dry_run = true. Read the log: it should list the finished ties and the
 #      scores it parsed, and say how many fields WOULD change (no commit).
@@ -50,7 +50,7 @@ jobs:
 
       - name: Fetch results and update data.json
         env:
-          SPORTMONKS_KEY: ${{ secrets.SPORTMONKS_KEY }}
+          SPORTMONKS_API_KEY: ${{ secrets.SPORTMONKS_API_KEY }}
           # Optional: pin these after the first dry run prints them, to skip discovery.
           # SPORTMONKS_LEAGUE_ID: ""
           # SPORTMONKS_SEASON_ID: ""

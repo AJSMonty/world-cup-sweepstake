@@ -86,8 +86,8 @@ change up within ~30s. Both the main site and `/bcs` share this one `data.json`.
 **One-time setup + validation.**
 
 1. `Settings → Secrets and variables → Actions → New repository secret`. Name it
-   **`SPORTMONKS_KEY`**, paste your token, save. (This is the only place the key
-   lives — encrypted, never in the repo or the browser.)
+   **`SPORTMONKS_API_KEY`**, paste your token, save. (This is the only place the
+   key lives — encrypted, never in the repo or the browser.)
 2. `Actions → "Update results (Sportmonks)" → Run workflow` with **dry_run =
    true**. Read the log: it lists the finished ties, the parsed scores, and how
    many fields *would* change — but writes nothing.
