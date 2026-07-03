@@ -1,0 +1,71 @@
+name: Update results (Sportmonks)
+
+# Pulls knockout results (winner + score) from the Sportmonks API and commits
+# data.json. The live GitHub Pages site picks up the new data within ~30s.
+#
+# The API key lives ONLY in the repo secret SPORTMONKS_KEY (Settings ->
+# Secrets and variables -> Actions). It is never written to the repo, the
+# committed data, or the browser — the fetch happens here on GitHub's runner.
+#
+# SETUP / VALIDATION (do this before enabling the schedule):
+#   1. Add the secret SPORTMONKS_KEY.
+#   2. Actions -> "Update results (Sportmonks)" -> Run workflow, with
+#      dry_run = true. Read the log: it should list the finished ties and the
+#      scores it parsed, and say how many fields WOULD change (no commit).
+#   3. If that looks right, run again with dry_run = false to write for real.
+#   4. Then uncomment the `schedule:` block below to let it run automatically.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (fetch + log only, don't commit)"
+        type: boolean
+        default: true
+      verbose:
+        description: "Verbose (print a sample fixture for debugging)"
+        type: boolean
+        default: false
+  # Uncomment to run automatically once validated. Every 30 min is plenty for
+  # half/full-time results; tighten to */15 during match days if you like.
+  # schedule:
+  #   - cron: "*/30 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-results
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch results and update data.json
+        env:
+          SPORTMONKS_KEY: ${{ secrets.SPORTMONKS_KEY }}
+          # Optional: pin these after the first dry run prints them, to skip discovery.
+          # SPORTMONKS_LEAGUE_ID: ""
+          # SPORTMONKS_SEASON_ID: ""
+          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || '0' }}
+          VERBOSE: ${{ (github.event_name == 'workflow_dispatch' && inputs.verbose) && '1' || '0' }}
+        run: node scripts/update-results.mjs
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- data.json; then
+            echo "No changes."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data.json
+            git commit -m "chore: auto-update results from Sportmonks"
+            git push
+          fi

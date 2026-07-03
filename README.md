@@ -62,51 +62,56 @@ serving its cached copy. WhatsApp caches previews hard, so when testing a change
 share the link with a throwaway query (e.g. `…/world-cup-sweepstake/?v=2`) to
 force its crawler to re-scrape.
 
-## Optional: automatic results (API-Football)
+## Automatic results (Sportmonks + GitHub Actions)
 
-There's a GitHub Actions workflow that can keep the knockout results up to date
-for you, so you only have to hand-edit the novelty prizes.
+A GitHub Actions workflow keeps the knockout results up to date for you, so you
+only hand-edit the novelty prizes. **No server, no hosting cost, and your API
+key never leaves GitHub** — the fetch runs on GitHub's runner and only the
+resulting `data.json` is committed.
 
-**How it works.** `.github/workflows/update-data.yml` runs every 30 minutes (and
-on demand from the Actions tab). It runs `scripts/update-data.mjs`, which calls
-[API-Football](https://www.api-football.com/), reads the World Cup fixtures, and
-rewrites `data.json` with:
+**How it works.** `.github/workflows/update-results.yml` runs
+`scripts/update-results.mjs`, which calls the
+[Sportmonks Football API](https://www.sportmonks.com/) with your key, reads the
+World Cup knockout fixtures, and updates `data.json` **in place**:
 
-- every knockout `winner` across all rounds (penalties count), and
-- the **tournament winner / runner-up / 3rd place** prizes once those games are
-  played.
+- sets each finished tie's `winner` and `score` (winner-first, e.g. `2-1`,
+  `1-1 (4-3p)` for pens, `3-2 aet`), and
+- sets the **tournament winner / runner-up / 3rd place** prize codes once those
+  games are played, and bumps `lastUpdated`.
 
-It then commits `data.json`, and the live site updates within ~30 seconds. The
-page itself is unchanged — this just edits `data.json` the same way you would by
-hand. No server, no hosting; the workflow runs on GitHub.
+It only ever writes those fields — it never touches bracket order, the fixtures
+schedule, owners, the novelty prizes, or prize amounts. The live site picks the
+change up within ~30s. Both the main site and `/bcs` share this one `data.json`.
 
-**One-time setup.**
+**One-time setup + validation.**
 
-1. Get a free key at <https://dashboard.api-football.com/> (direct API-Football,
-   not RapidAPI — the script sends the `x-apisports-key` header).
-2. In this repo: `Settings → Secrets and variables → Actions → New repository
-   secret`. Name it **`API_FOOTBALL_KEY`**, paste the key, save.
-3. Enable Actions if prompted (`Actions` tab → enable workflows).
-4. Trigger a first run: `Actions → Update results → Run workflow`. Check the log;
-   it prints how many ties it found and decided.
+1. `Settings → Secrets and variables → Actions → New repository secret`. Name it
+   **`SPORTMONKS_KEY`**, paste your token, save. (This is the only place the key
+   lives — encrypted, never in the repo or the browser.)
+2. `Actions → "Update results (Sportmonks)" → Run workflow` with **dry_run =
+   true**. Read the log: it lists the finished ties, the parsed scores, and how
+   many fields *would* change — but writes nothing.
+3. If that looks right, run it again with **dry_run = false** to write for real.
+4. Then **uncomment the `schedule:` block** in the workflow to let it run
+   automatically (every 30 min is plenty for half/full-time results).
 
-**What it never touches.** The novelty prizes — wooden spoon, biggest hammering,
-longest-distance goal, dirtiest team — have no data feed, so you still set those
-by hand in `data.json`'s `dynamicPrizes`. The script only overwrites `winner`,
-`runnerUp` and `thirdPlace`.
+Public repos get unlimited Actions minutes, so this is completely free.
+
+**What it never touches.** The novelty prizes (wooden spoon, biggest hammering,
+longest goal, dirtiest, latest goal) have no clean data feed, so you still set
+those by hand in `data.json`'s `dynamicPrizes`.
 
 **Things to know.**
 
-- The free API-Football tier is ~100 requests/day; this uses ~48 (one per run).
-  Coverage of the 2026 World Cup depends on your plan — if a run logs an API
-  error or 0 fixtures, it leaves `data.json` untouched (nothing breaks).
-- Defaults are league `1` (World Cup) and season `2026`. Override via the
-  `API_FOOTBALL_LEAGUE` / `API_FOOTBALL_SEASON` env vars in the workflow if
-  needed.
-- Team names are matched to the bracket's 3-letter codes by an alias table in
-  the script. If a nation ever fails to match, add its API spelling to
-  `ALIASES` in `scripts/update-data.mjs`.
+- **Plan coverage matters.** Sportmonks' cheaper plans cover limited leagues —
+  the 2026 World Cup may need a specific plan. If a run logs an API error or 0
+  fixtures, it leaves `data.json` untouched (nothing breaks). The dry run tells
+  you immediately whether your plan can see the tournament.
+- Team names are matched to the 3-letter codes by an alias table in the script.
+  If a nation fails to match (shows as "Unmapped" in verbose logs), add its
+  Sportmonks spelling to `ALIASES` in `scripts/update-results.mjs`.
+- The first dry run prints the World Cup league id it discovered; you can pin it
+  via `SPORTMONKS_LEAGUE_ID` in the workflow to skip discovery.
 
-**Prefer to stay fully manual?** Just don't add the secret (the workflow then
-no-ops), or delete `.github/workflows/update-data.yml`. Editing the tiny
-`data.json` by hand is little work for a ~3-week knockout and never breaks.
+**Prefer to stay fully manual?** Don't add the secret (the workflow no-ops), or
+delete the workflow. Editing the tiny `data.json` by hand is little work.
