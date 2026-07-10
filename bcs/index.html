@@ -1152,9 +1152,17 @@
             // A single bright pulse flows inward along each advancing team's
             // vein (toward the trophy), looping. One continuous dash with a huge
             // gap = exactly one pulse per vein; the dash offset animates it in.
+            // All veins share ONE cycle (sized to the longest vein) so every
+            // pulse launches from the outer ring at the same instant and moves
+            // as one synchronised wave — per-vein cycles would drift apart as
+            // veins differ in length once teams drop out at different stages.
             var PULSE_LEN = 24;     // length of the lit pulse
             var PULSE_SPEED = 150;  // canvas units per second
-            var PULSE_GAP = 64;     // dark pause (units) before the next pulse
+            var PULSE_GAP = 64;     // dark pause (units) before the next wave
+            var maxVeinLen = 0;
+            veins.forEach(function(v) { if (v.length > maxVeinLen) maxVeinLen = v.length; });
+            var travel = maxVeinLen + PULSE_LEN + PULSE_GAP; // shared cycle distance
+            var pos = REDUCED_MOTION ? PULSE_LEN : (elapsed * PULSE_SPEED) % travel;
             ctx.save();
             ctx.lineCap = 'round';
             ctx.lineWidth = 4;
@@ -1162,11 +1170,9 @@
             ctx.shadowColor = '#ffcf4d';
             ctx.shadowBlur = 14;
             ctx.setLineDash([PULSE_LEN, 100000]);
+            ctx.lineDashOffset = -pos;                       // negative = move forward (inward)
             veins.forEach(function(v) {
                 if (v.length <= 1) return;
-                var travel = v.length + PULSE_GAP;          // full cycle distance
-                var pos = REDUCED_MOTION ? PULSE_LEN : (elapsed * PULSE_SPEED) % travel;
-                ctx.lineDashOffset = -pos;                   // negative = move forward (inward)
                 ctx.stroke(v.path);
             });
             ctx.restore();
