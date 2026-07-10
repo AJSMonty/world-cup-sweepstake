@@ -707,6 +707,9 @@
         
         var activeTeams = [];
         var eliminatedTeams = [];
+        // Codes of teams knocked out — the bracket fades these so the sides
+        // still alive pop against the dead branches.
+        var eliminatedCodes = new Set();
 
         function processStandings() {
             activeTeams = [];
@@ -729,6 +732,7 @@
                     activeTeams.push(team);
                 }
             });
+            eliminatedCodes = new Set(eliminatedTeams.map(function(t) { return t.code; }));
 
             document.getElementById('active-count').innerText = activeTeams.length;
             document.getElementById('elim-count').innerText = eliminatedTeams.length;
@@ -991,8 +995,10 @@
                 var d90  = Math.min(Math.abs(eff - Math.PI / 2), TAU - Math.abs(eff - Math.PI / 2));
                 var d270 = Math.min(Math.abs(eff - 3 * Math.PI / 2), TAU - Math.abs(eff - 3 * Math.PI / 2));
                 var boundaryDist = Math.min(d90, d270);
-                ctx.globalAlpha = Math.min(1, boundaryDist / 0.07);
-                ctx.fillStyle = '#ccc';
+                // Teams that are out sit faded so the sides still alive pop.
+                var out = eliminatedCodes.has(n.team.code);
+                ctx.globalAlpha = Math.min(1, boundaryDist / 0.07) * (out ? 0.38 : 1);
+                ctx.fillStyle = out ? '#9a9a9a' : '#ccc';
                 if (eff > Math.PI / 2 && eff < 3 * Math.PI / 2) {
                     ctx.rotate(a + Math.PI); ctx.textAlign = 'right';
                     ctx.fillText(n.team.name, 0, 0);
@@ -1007,6 +1013,9 @@
                 tree[r].forEach(function(n) {
                     var isActive = (r === 0) ? true : !!n.team;
                     var playingToday = n.team && todayPlayingCodes[n.team.code];
+                    // Knocked-out teams fade — every chip on their run dims,
+                    // so only the sides still alive stay vivid.
+                    var out = n.team && eliminatedCodes.has(n.team.code);
 
                     // Subtle breathing gold halo marks teams playing today.
                     if (playingToday) {
@@ -1031,20 +1040,25 @@
                         // Flag fills the circle (object-fit: cover), clipped
                         // round. Counter-rotate by the tree's spin so flags
                         // stay upright — like the fixed centre cap on a
-                        // spinning wheel.
+                        // spinning wheel. Eliminated teams draw at reduced
+                        // alpha over the dark disc, which reads as dimmed.
                         ctx.save();
                         ctx.translate(n.x, n.y);
                         ctx.rotate(-rot);
+                        if (out) ctx.globalAlpha = 0.4;
                         drawCoverFlag(n.team.flag, 0, 0, 13);
                         ctx.restore();
                     }
 
                     // Gold ring on top so the flag edge stays crisp (brighter
-                    // and a touch thicker for teams playing today).
+                    // and a touch thicker for teams playing today; faded to
+                    // match the dimmed flag once a team is out).
                     ctx.beginPath();
                     ctx.arc(n.x, n.y, 14, 0, Math.PI * 2);
                     ctx.lineWidth = playingToday ? 2.6 : 2;
-                    ctx.strokeStyle = playingToday ? '#ffe7a3' : (isActive ? '#d4af37' : '#444');
+                    ctx.strokeStyle = playingToday ? '#ffe7a3'
+                        : out ? 'rgba(212, 175, 55, 0.32)'
+                        : (isActive ? '#d4af37' : '#444');
                     ctx.stroke();
                 });
             }
