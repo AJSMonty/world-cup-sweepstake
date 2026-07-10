@@ -1,0 +1,73 @@
+name: Update odds (The Odds API)
+
+# Refreshes the "favourite (~odds)" text on the winner / runner-up / 3rd-place
+# awards from live outright (tournament-winner) odds. Runs a few times a day —
+# odds don't move fast, and The Odds API free tier is ~500 requests/month
+# (this uses ~2 per run, ~120/month, and no requests at all once the tournament
+# winner is decided).
+#
+# The API key lives ONLY in the repo secret ODDS_API_KEY (Settings -> Secrets
+# and variables -> Actions). It's never written to the repo or the browser.
+#
+# SETUP:
+#   1. Get a free key at https://the-odds-api.com and add it as the secret
+#      ODDS_API_KEY.
+#   2. Actions -> "Update odds (The Odds API)" -> Run workflow with dry_run =
+#      true to check the log (it prints the ranked favourites it would write).
+#   3. It's already scheduled below; the schedule runs with dry_run = false.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (fetch + log only, don't commit)"
+        type: boolean
+        default: true
+      verbose:
+        description: "Verbose (print discovered market + ranked favourites)"
+        type: boolean
+        default: true
+  schedule:
+    - cron: "0 */12 * * *"
+
+permissions:
+  contents: write
+
+# Share the results workflow's concurrency group so the two data.json writers
+# never run at the same time.
+concurrency:
+  group: update-results
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch odds and update data.json
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          # Optional: pin after the first dry run prints it, to skip discovery.
+          # ODDS_SPORT_KEY: "soccer_fifa_world_cup_winner"
+          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || '0' }}
+          VERBOSE: ${{ (github.event_name == 'workflow_dispatch' && inputs.verbose) && '1' || '0' }}
+        run: node scripts/update-odds.mjs
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- data.json; then
+            echo "No changes."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add data.json
+            git commit -m "chore: auto-update award odds from The Odds API"
+            # Rebase onto any results commit that landed since checkout, then push.
+            git pull --rebase origin main
+            git push
+          fi

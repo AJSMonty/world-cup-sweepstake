@@ -25,6 +25,7 @@
 // ---------------------------------------------------------------------------
 
 import { readFile, writeFile } from "node:fs/promises";
+import { toCode } from "./team-codes.mjs";
 
 const KEY = process.env.SPORTMONKS_API_KEY || process.env.SPORTMONKS_KEY;
 const BASE = "https://api.sportmonks.com/v3/football";
@@ -43,38 +44,8 @@ const WINDOW_END = "2026-07-20";
 // minute=90 and an extra-time goal is minute>90. Flip to true to count ET.
 const COUNT_EXTRA_TIME = false;
 
-// Our 3-letter code -> spellings Sportmonks might use. Matching is
-// accent/punctuation/case-insensitive, so only real differences matter.
-const ALIASES = {
-  RSA: ["south africa"], CAN: ["canada"], KOR: ["south korea", "korea republic"],
-  CZE: ["czech republic", "czechia"], QAT: ["qatar"], SUI: ["switzerland"],
-  BIH: ["bosnia and herzegovina", "bosnia herzegovina", "bosnia herz", "bosnia"],
-  BRA: ["brazil"], MAR: ["morocco"], HAI: ["haiti"], SCO: ["scotland"],
-  USA: ["usa", "united states", "united states of america"], PAR: ["paraguay"],
-  AUS: ["australia"], TUR: ["turkey", "turkiye", "türkiye"], GER: ["germany"],
-  CUR: ["curacao", "curaçao"], CIV: ["ivory coast", "cote divoire", "côte divoire"],
-  ECU: ["ecuador"], NED: ["netherlands"], JPN: ["japan"], TUN: ["tunisia"],
-  SWE: ["sweden"], BEL: ["belgium"], EGY: ["egypt"], IRN: ["iran", "iran islamic republic"],
-  NZL: ["new zealand"], ESP: ["spain"], MEX: ["mexico"],
-  CPV: ["cape verde", "cape verde islands", "cabo verde"],
-  URU: ["uruguay"], KSA: ["saudi arabia"], FRA: ["france"], SEN: ["senegal"],
-  NOR: ["norway"], IRQ: ["iraq"], ARG: ["argentina"], ALG: ["algeria"],
-  AUT: ["austria"], JOR: ["jordan"], POR: ["portugal"],
-  COD: ["dr congo", "congo dr", "democratic republic of congo", "congo democratic republic"],
-  UZB: ["uzbekistan"], COL: ["colombia"], ENG: ["england"], CRO: ["croatia"],
-  GHA: ["ghana"], PAN: ["panama"],
-};
-
-const norm = (s) =>
-  (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "")
-    .toLowerCase().replace(/[^a-z ]/g, "").trim();
-
-const NAME_TO_CODE = new Map();
-for (const [code, names] of Object.entries(ALIASES)) {
-  NAME_TO_CODE.set(norm(code), code);
-  for (const n of names) NAME_TO_CODE.set(norm(n), code);
-}
-const toCode = (name) => NAME_TO_CODE.get(norm(name)) || null;
+// Team-name -> 3-letter-code mapping lives in a shared module (also used by the
+// odds updater) so both agree on nation spellings.
 
 // Sportmonks "state" developer_name values that mean the match is over.
 const FINISHED = new Set(["FT", "AET", "FT_PEN", "PEN", "AWARDED", "FINISHED"]);

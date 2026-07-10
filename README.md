@@ -132,3 +132,32 @@ so you still eyeball that one and set it by hand in `dynamicPrizes`.
 
 **Prefer to stay fully manual?** Don't add the secret (the workflow no-ops), or
 delete the workflow. Editing the tiny `data.json` by hand is little work.
+
+## Automatic award odds (The Odds API + GitHub Actions)
+
+Sportmonks' plan here has no odds access, so the "favourite (~5/2)" text on the
+**winner / runner-up / 3rd-place** awards comes from a second free feed:
+[The Odds API](https://the-odds-api.com) (free tier ~500 requests/month).
+
+`.github/workflows/update-odds.yml` runs `scripts/update-odds.mjs` a few times a
+day. It reads the **outright (tournament-winner) market**, keeps only the teams
+still alive in the bracket, ranks them by consensus (median) price across
+bookmakers, converts decimal → standard UK fractional odds, and rewrites just
+the `status` text of those three awards — e.g. `TBD — favourite: France (~5/2)`.
+
+It only touches that text, and only while a prize is undecided (`code: null`).
+Once the final / 3rd-place games are played, the Sportmonks updater fills in the
+real codes and the odds updater leaves them alone. It uses ~2 requests per run
+(~120/month) and makes **no** requests once the winner is decided.
+
+**Setup.**
+
+1. Get a free key at [the-odds-api.com](https://the-odds-api.com) and add it as
+   the repo secret **`ODDS_API_KEY`** (same place as `SPORTMONKS_API_KEY`).
+2. `Actions → "Update odds (The Odds API)" → Run workflow` with **dry_run =
+   true** to see the ranked favourites it would write. It's already scheduled;
+   the schedule commits for real.
+
+The first verbose run prints the outright market key it discovered — pin it via
+`ODDS_SPORT_KEY` in the workflow to save a request. No key added? The workflow
+no-ops and the hand-typed odds text stays as-is.
