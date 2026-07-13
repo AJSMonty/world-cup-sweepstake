@@ -140,10 +140,20 @@ Sportmonks' plan here has no odds access, so the "favourite (~5/2)" text on the
 [The Odds API](https://the-odds-api.com) (free tier ~500 requests/month).
 
 `.github/workflows/update-odds.yml` runs `scripts/update-odds.mjs` a few times a
-day. It reads the **outright (tournament-winner) market**, keeps only the teams
-still alive in the bracket, ranks them by consensus (median) price across
-bookmakers, converts decimal → standard UK fractional odds, and rewrites just
-the `status` text of those three awards — e.g. `TBD — favourite: France (~5/2)`.
+day. It reads the **outright (tournament-winner) market** for the teams still
+alive in the bracket, then fills the three awards by their *actual* meaning:
+
+- **Winner** = the market favourite (most likely to win), shown at its real
+  market price → `TBD — favourite: France (~5/2)`.
+- **Runner-up** = most likely to *finish 2nd* (lose the final), and
+  **3rd place** = most likely to *finish 3rd* (win the 3rd-place play-off).
+  These are **not** the 2nd/3rd tournament favourites — a team's finishing
+  position depends on which half of the bracket it's in — so they come from a
+  bracket simulation (200k runs, decided ties replayed exactly, unplayed
+  matches picked by Bradley–Terry from the winner odds; deterministic via a
+  seeded RNG). Their odds are shown as fair odds from the simulated probability.
+
+Decimal prices are snapped to the standard UK fractional ladder for display.
 
 It only touches that text, and only while a prize is undecided (`code: null`).
 Once the final / 3rd-place games are played, the Sportmonks updater fills in the

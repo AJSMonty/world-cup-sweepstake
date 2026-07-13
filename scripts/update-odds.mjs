@@ -1,7 +1,12 @@
 // ---------------------------------------------------------------------------
 // Updates the "favourite (~odds)" text on the tournament-winner / runner-up /
-// 3rd-place awards from live outright (tournament-winner) odds via The Odds API
-// (https://the-odds-api.com — free tier ~500 requests/month).
+// 3rd-place awards using live outright (tournament-winner) odds from The Odds
+// API (https://the-odds-api.com — free tier ~500 requests/month).
+//
+// The winner award is the market favourite. The runner-up and 3rd-place awards
+// are the teams MOST LIKELY TO FINISH 2nd / 3rd — which is not the 2nd/3rd
+// favourite to win — so those come from a bracket simulation seeded with the
+// same winner odds (see simulateBracket below), not straight off the market.
 //
 // It ONLY rewrites the `status` text of dynamicPrizes.winner / runnerUp /
 // thirdPlace, and ONLY while their `code` is still null (undecided). Once the
@@ -93,6 +98,73 @@ function aliveCodes(data) {
   return new Set([...winners].filter((c) => !eliminated.has(c)));
 }
 
+// "Most likely runner-up" and "most likely 3rd" are NOT the 2nd/3rd favourites
+// to win — a team's chance of *losing the final* or *winning the 3rd-place
+// play-off* depends on the bracket (who's in whose half). So we simulate the
+// rest of the tournament many times and count how often each team finishes
+// 1st / 2nd / 3rd, rather than reading those places off the winner market.
+//
+// Model: reconstruct the bracket from data.json, replay decided ties exactly,
+// and for each unplayed match pick a winner by Bradley–Terry from bookmaker-
+// implied strength (strength = 1 / decimal winner-odds). Deterministic (seeded
+// RNG + fixed iteration count) so identical odds give identical output — no
+// flapping commits from simulation noise.
+function simulateBracket(data, priceOf, iterations = 200000) {
+  const km = data.knockoutMatches || [];
+  // The first 16 ties are the Round of 32 in bracket-seed order; that
+  // reconstructs the whole single-elimination tree.
+  if (km.length < 16) return null;
+  const level0 = [];
+  for (let i = 0; i < 16; i++) {
+    if (!km[i] || !km[i].a || !km[i].b) return null;
+    level0.push(km[i].a, km[i].b);
+  }
+  const resultOf = new Map();
+  for (const m of km) if (m.winner) resultOf.set([m.a, m.b].sort().join("|"), m.winner);
+  const strength = (c) => { const p = priceOf.get(c); return p && p.dec > 0 ? 1 / p.dec : 1e-6; };
+
+  // mulberry32 seeded PRNG — deterministic across runs.
+  let seed = 0x9e3779b9 >>> 0;
+  const rnd = () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+  const decide = (a, b) => {
+    const w = resultOf.get([a, b].sort().join("|"));
+    if (w) return w;                       // replay real results exactly
+    const sa = strength(a);
+    return rnd() < sa / (sa + strength(b)) ? a : b;
+  };
+
+  const champ = {}, runner = {}, third = {};
+  const bump = (o, c) => { if (c) o[c] = (o[c] || 0) + 1; };
+  for (let it = 0; it < iterations; it++) {
+    let round = level0.slice();
+    const semiLosers = [];
+    let champion = null, finalist = null;
+    while (round.length > 1) {
+      const isSemi = round.length === 4, isFinal = round.length === 2;
+      const next = [];
+      for (let i = 0; i < round.length; i += 2) {
+        const a = round[i], b = round[i + 1];
+        const w = decide(a, b), l = w === a ? b : a;
+        if (isSemi) semiLosers.push(l);     // the two 3rd-place-play-off teams
+        if (isFinal) { champion = w; finalist = l; }
+        next.push(w);
+      }
+      round = next;
+    }
+    const t3 = semiLosers.length === 2 ? decide(semiLosers[0], semiLosers[1]) : null;
+    bump(champ, champion); bump(runner, finalist); bump(third, t3);
+  }
+  return { champ, runner, third, N: iterations };
+}
+
+// [code, count] of the highest-tallied team in a count map, or null.
+const topOf = (counts) => Object.entries(counts).sort((a, b) => b[1] - a[1])[0] || null;
+
 export async function main() {
   if (!process.env.ODDS_API_KEY) {
     console.log("No ODDS_API_KEY set — skipping, data.json unchanged.");
@@ -133,23 +205,52 @@ export async function main() {
   }
   const alive = aliveCodes(data);
   const median = (a) => { const s = [...a].sort((x, y) => x - y); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
-  const ranked = [...prices.entries()]
-    .filter(([code]) => alive.size === 0 || alive.has(code))
-    .map(([code, v]) => ({ code, name: v.name, dec: median(v.decs) }))
-    .sort((a, b) => a.dec - b.dec);
-
-  if (VERBOSE()) console.log("Ranked (alive) favourites:", ranked.map((r) => `${r.name} ${r.dec}→${toFractional(r.dec)}`).join(", "));
-  if (!ranked.length) {
+  // Consensus decimal winner-price per still-alive team.
+  const priceOf = new Map(); // code -> { name, dec }
+  for (const [code, v] of prices) {
+    if (alive.size && !alive.has(code)) continue;
+    priceOf.set(code, { name: v.name, dec: median(v.decs) });
+  }
+  const nameOf = (code) => (priceOf.get(code) && priceOf.get(code).name) || code;
+  const favourites = [...priceOf.entries()].sort((a, b) => a[1].dec - b[1].dec);
+  if (!favourites.length) {
     console.log("No live-team prices to rank — leaving data.json unchanged.");
     return;
   }
 
-  const nm = (i) => ranked[i] ? `${ranked[i].name} (~${toFractional(ranked[i].dec)})` : null;
+  // Winner = market favourite (most likely to win). Runner-up and 3rd come from
+  // simulating the remaining bracket (most likely to LOSE THE FINAL / win the
+  // 3rd-place play-off) — not the 2nd/3rd tournament favourites.
+  const sim = simulateBracket(data, priceOf);
+  const winCode = favourites[0][0];
+  let ruCode = null, ru = 0, thCode = null, th = 0;
+  if (sim) {
+    const r = topOf(sim.runner), t = topOf(sim.third);
+    if (r) { ruCode = r[0]; ru = r[1] / sim.N; }
+    if (t) { thCode = t[0]; th = t[1] / sim.N; }
+    if (VERBOSE()) {
+      const pct = (o) => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 4)
+        .map(([c, n]) => `${nameOf(c)} ${(100 * n / sim.N).toFixed(0)}%`).join(", ");
+      console.log("Sim P(win):", pct(sim.champ));
+      console.log("Sim P(runner-up):", pct(sim.runner));
+      console.log("Sim P(3rd):", pct(sim.third));
+    }
+  } else {
+    // Bracket not reconstructable — fall back to 2nd/3rd favourites.
+    console.log("Bracket sim unavailable — falling back to winner-market order.");
+    ruCode = favourites[1] && favourites[1][0];
+    thCode = favourites[2] && favourites[2][0];
+  }
+
+  // Odds shown: the winner's real market price; the runner-up/3rd as fair odds
+  // derived from their simulated probability (1 / probability).
   const texts = {
-    winner: ranked[0] ? `TBD — favourite: ${nm(0)}` : null,
-    runnerUp: ranked[1] ? `TBD — next: ${nm(1)}` : null,
-    thirdPlace: ranked[2]
-      ? `TBD — chasing: ${ranked[3] ? ranked[2].name + " / " + ranked[3].name : ranked[2].name} (~${toFractional(ranked[2].dec)})`
+    winner: `TBD — favourite: ${nameOf(winCode)} (~${toFractional(favourites[0][1].dec)})`,
+    runnerUp: ruCode
+      ? `TBD — likeliest runner-up: ${nameOf(ruCode)}${ru ? " (~" + toFractional(1 / ru) + ")" : ""}`
+      : null,
+    thirdPlace: thCode
+      ? `TBD — likeliest 3rd: ${nameOf(thCode)}${th ? " (~" + toFractional(1 / th) + ")" : ""}`
       : null,
   };
 

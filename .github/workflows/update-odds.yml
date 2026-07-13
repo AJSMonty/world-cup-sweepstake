@@ -22,7 +22,7 @@ on:
       dry_run:
         description: "Dry run (fetch + log only, don't commit)"
         type: boolean
-        default: true
+        default: false
       verbose:
         description: "Verbose (print discovered market + ranked favourites)"
         type: boolean
