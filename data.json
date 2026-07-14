@@ -1,6 +1,6 @@
 {
   "_comment": "EDIT THIS FILE to update the page. Matches are in bracket order. Set a match 'winner' to the 3-letter code of the team that advanced (penalties count), and add a 'score' string (winner-first, e.g. '2-1', '1-1 (4-3p)' for pens, '3-2 aet') — it shows subtly on the bracket. Set a prize 'code' to a team code, or null for TBD. Commit on GitHub and the page updates within ~30s. IMPORTANT: also bump 'lastUpdated' to the current UTC time (YYYY-MM-DDTHH:MM:SSZ) whenever you edit anything below — it drives the 'Last updated' label shown on both pages.",
-  "lastUpdated": "2026-07-14T20:59:33Z",
+  "lastUpdated": "2026-07-14T21:00:53Z",
   "knockoutMatches": [
     {
       "a": "GER",
@@ -180,15 +180,15 @@
   "dynamicPrizes": {
     "winner": {
       "code": null,
-      "status": "TBD — favourite: France (~6/4)"
+      "status": "TBD — favourite: Spain (~8/11)"
     },
     "runnerUp": {
       "code": null,
-      "status": "TBD — likeliest runner-up: England (~2/1)"
+      "status": "TBD — likeliest runner-up: England (~6/4)"
     },
     "thirdPlace": {
       "code": null,
-      "status": "TBD — likeliest 3rd: Spain (~15/8)"
+      "status": "TBD — likeliest 3rd: Argentina (~4/5)"
     },
     "woodenSpoon": {
       "code": "IRQ",
