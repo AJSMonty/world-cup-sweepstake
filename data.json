@@ -1,6 +1,6 @@
 {
   "_comment": "EDIT THIS FILE to update the page. Matches are in bracket order. Set a match 'winner' to the 3-letter code of the team that advanced (penalties count), and add a 'score' string (winner-first, e.g. '2-1', '1-1 (4-3p)' for pens, '3-2 aet') — it shows subtly on the bracket. Set a prize 'code' to a team code, or null for TBD. Commit on GitHub and the page updates within ~30s. IMPORTANT: also bump 'lastUpdated' to the current UTC time (YYYY-MM-DDTHH:MM:SSZ) whenever you edit anything below — it drives the 'Last updated' label shown on both pages.",
-  "lastUpdated": "2026-07-17T08:12:03Z",
+  "lastUpdated": "2026-07-17T08:21:46Z",
   "knockoutMatches": [
     {
       "a": "GER",
@@ -209,8 +209,8 @@
       "status": "Leading: Hans Vanaken 32.45m vs USA (R16) — longest of the tournament (Trionda), ahead of Kevin Pina's 30.8m for CPV"
     },
     "dirtiestTeam": {
-      "code": "PAR",
-      "status": "Leading: 12 booking points — 9 yellow, 1 red (red=3, yellow=1)"
+      "code": null,
+      "status": "4-way tie on 12 booking pts (red=3, yellow=1): EGY (12Y), PAR (9Y,1R), ECU (9Y,1R), ENG (9Y,1R) — ENG can still pull clear in the final (19 Jul)"
     },
     "dirtiestPerformance": {
       "code": "RSA",
