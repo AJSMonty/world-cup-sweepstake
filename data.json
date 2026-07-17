@@ -1,6 +1,6 @@
 {
   "_comment": "EDIT THIS FILE to update the page. Matches are in bracket order. Set a match 'winner' to the 3-letter code of the team that advanced (penalties count), and add a 'score' string (winner-first, e.g. '2-1', '1-1 (4-3p)' for pens, '3-2 aet') — it shows subtly on the bracket. Set a prize 'code' to a team code, or null for TBD. Commit on GitHub and the page updates within ~30s. IMPORTANT: also bump 'lastUpdated' to the current UTC time (YYYY-MM-DDTHH:MM:SSZ) whenever you edit anything below — it drives the 'Last updated' label shown on both pages.",
-  "lastUpdated": "2026-07-16T02:42:21Z",
+  "lastUpdated": "2026-07-17T08:12:03Z",
   "knockoutMatches": [
     {
       "a": "GER",
@@ -205,8 +205,8 @@
       "status": "Leading: lost 1-7 to Germany, -6 margin (Group E)"
     },
     "longestGoal": {
-      "code": "CPV",
-      "status": "Leading: Kevin Pina ~30.8m vs Uruguay — longest of the tournament (group stage)"
+      "code": "BEL",
+      "status": "Leading: Hans Vanaken 32.45m vs USA (R16) — longest of the tournament (Trionda), ahead of Kevin Pina's 30.8m for CPV"
     },
     "dirtiestTeam": {
       "code": "PAR",
